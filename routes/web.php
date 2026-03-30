@@ -3,6 +3,7 @@
 // importing the controller
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
@@ -17,9 +18,11 @@ Route::get('/', [HomeController::class, 'index'])
 ->name('index');
 
 
-// catageory of welocme home 
+// catageory of welcome home 
 Route::get('/category/{category}', [HomeController::class, 'index'])
     ->name('category');
+
+//
 
 
 
@@ -42,6 +45,10 @@ Route::post('/logout', [UserController::class, 'logout'])->name('logout');
 // for admin only
 
 Route::resource('/admin', AdminController::class);
+
+
+Route::post('/category',[CategoryController::class, 'category']);
+
 
 
 

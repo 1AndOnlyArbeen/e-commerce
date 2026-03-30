@@ -16,8 +16,9 @@ class AdminController extends Controller
 
 
 
-    public function index()
+    public function index(Request $request ,$category = "All")
     {
+        //adding the pagination 
         $user = Auth::user();
 
         // if not logged in OR not admin → redirect to store
@@ -25,10 +26,29 @@ class AdminController extends Controller
             return redirect('/store');
         }
 
+
+
+        $query = Product::query();
+       if ($category !== 'All') {
+        $query->where('category', $category);
+    }
+
+        $products = $query->paginate(15);
+           if ($request->ajax()) {
+        return response()->json([
+            'products' => $products->items(),
+            'pagination' => (string) $products->links(),
+            'total' => $products->total(),
+        ]);
+    }
+
+
+
+
         $allProduct = Product::all();
         $byCategory = Product::all()->groupBy('category');
 
-        return view('admin', compact('allProduct', 'byCategory'));
+        return view('admin', compact('allProduct', 'byCategory','products'));
     }
 
     public function create(Request $request) {}
@@ -154,6 +174,5 @@ class AdminController extends Controller
 
         $products->delete();
         return redirect('admin');
-
     }
 }

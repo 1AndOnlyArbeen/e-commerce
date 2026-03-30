@@ -16,8 +16,8 @@ class HomeController
 
      $query = Product::query();
 
-    if ($category !== 'All') {
-        $query->where('category', $category);
+    if ($category !=='All') {
+        $query->where('category',$category);
     }
         $products = $query->paginate(15);
         $products->getCollection()->transform (function ($p) {
