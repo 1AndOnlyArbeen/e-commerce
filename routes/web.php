@@ -14,13 +14,14 @@ use App\Http\Controllers\UserController;
 
 
 Route::get('/', [HomeController::class, 'index'])
-->name('index')
-->middleware('auth');
+->name('index');
 
 
+// catageory of welocme home 
+Route::get('/category/{category}', [HomeController::class, 'index'])
+    ->name('category');
 
 
-//
 
 // register router;
 
@@ -43,8 +44,9 @@ Route::post('/logout', [UserController::class, 'logout'])->name('logout');
 Route::resource('/admin', AdminController::class);
 
 
-// for the product edit and update 
 
+
+// for the product edit and update 
 
 Route::put('/admin/products/{id}', [AdminController::class, 'update']);
 Route::delete('/admin/products/{id}', [AdminController::class, 'destroy']);

@@ -11,40 +11,64 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { nunito: ['Nunito', 'sans-serif'] },
+                    fontFamily: {
+                        nunito: ['Nunito', 'sans-serif']
+                    },
                     colors: {
-                        green: { brand: '#0c7a3e', dark: '#0a6633', light: '#1aad5e', pale: '#f0faf4', muted: '#a8e6c1' }
+                        green: {
+                            brand: '#0c7a3e',
+                            dark: '#0a6633',
+                            light: '#1aad5e',
+                            pale: '#f0faf4',
+                            muted: '#a8e6c1'
+                        }
                     }
                 }
             }
         }
     </script>
     <style>
-        body { font-family: 'Nunito', sans-serif; }
+        body {
+            font-family: 'Nunito', sans-serif;
+        }
 
         /* ── Cart badge ── */
-        .cart-badge { display: none; }
-        .cart-badge.visible { display: flex; }
+        .cart-badge {
+            display: none;
+        }
+
+        .cart-badge.visible {
+            display: flex;
+        }
 
         /* ── Drawer ── */
-        .drawer { transition: right 0.3s ease; }
+        .drawer {
+            transition: right 0.3s ease;
+        }
 
         /* ── Image zoom on hover ── */
-        .product-img-wrap { overflow: hidden; }
+        .product-img-wrap {
+            overflow: hidden;
+        }
+
         .product-img-wrap img {
             transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             will-change: transform;
         }
-        .product-img-wrap:hover img { transform: scale(1.12); }
+
+        .product-img-wrap:hover img {
+            transform: scale(1.12);
+        }
 
         /* ── Product card ── */
         .product-card {
             cursor: pointer;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+
         .product-card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 12px 32px rgba(12,122,62,0.12);
+            box-shadow: 0 12px 32px rgba(12, 122, 62, 0.12);
         }
 
         /* ── Product Detail Modal ── */
@@ -52,13 +76,17 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.55);
+            background: rgba(0, 0, 0, 0.55);
             z-index: 500;
             align-items: center;
             justify-content: center;
             backdrop-filter: blur(4px);
         }
-        .modal-backdrop.open { display: flex; }
+
+        .modal-backdrop.open {
+            display: flex;
+        }
+
         .modal-box {
             background: #fff;
             border-radius: 24px;
@@ -68,23 +96,38 @@
             overflow: hidden;
             display: flex;
             animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 0 40px 80px rgba(0,0,0,0.25);
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.25);
         }
+
         @keyframes modalIn {
-            from { transform: scale(0.88) translateY(20px); opacity: 0; }
-            to   { transform: scale(1) translateY(0); opacity: 1; }
+            from {
+                transform: scale(0.88) translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
         }
 
         /* ── Modal image zoom ── */
-        .modal-img-wrap { overflow: hidden; }
+        .modal-img-wrap {
+            overflow: hidden;
+        }
+
         .modal-img-wrap img {
             transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
-        .modal-img-wrap:hover img { transform: scale(1.08); }
+
+        .modal-img-wrap:hover img {
+            transform: scale(1.08);
+        }
 
         /* ── Quantity stepper ── */
         .qty-btn {
-            width: 34px; height: 34px;
+            width: 34px;
+            height: 34px;
             border: 2px solid #0c7a3e;
             border-radius: 10px;
             background: transparent;
@@ -92,11 +135,17 @@
             font-size: 20px;
             font-weight: 900;
             cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: all 0.15s;
             font-family: 'Nunito', sans-serif;
         }
-        .qty-btn:hover { background: #0c7a3e; color: #fff; }
+
+        .qty-btn:hover {
+            background: #0c7a3e;
+            color: #fff;
+        }
 
         /* ── Tag badge ── */
         .tag-badge {
@@ -106,6 +155,92 @@
             border-radius: 6px;
             padding: 2px 8px;
         }
+
+        {/*dark theme*/ }
+
+/* ── CSS Variables ── */
+:root {
+    --bg: #f3f4f6;
+    --surface: #ffffff;
+    --surface-2: #f9fafb;
+    --border: #e5e7eb;
+    --text-primary: #111827;
+    --text-secondary: #6b7280;
+    --text-muted: #9ca3af;
+    --input-bg: #ffffff;
+    --input-text: #374151;
+    --dm-btn-bg: rgba(255,255,255,0.15);
+    --dm-btn-color: #ffffff;
+}
+
+[data-theme="dark"] {
+    --bg: #1c2333;
+    --surface: #263044;
+    --surface-2: #202a3c;
+    --border: #3a4a60;
+    --text-primary: #f0f4ff;
+    --text-secondary: #a0aec0;
+    --text-muted: #6b7a99;
+    --input-bg: #263044;
+    --input-text: #e8edf8;
+}
+
+/* ── Base ── */
+[data-theme="dark"] body { background: var(--bg); }
+
+/* ── ALL text colors globally ── */
+[data-theme="dark"] .text-gray-900 { color: var(--text-primary) !important; }
+[data-theme="dark"] .text-gray-700 { color: var(--text-primary) !important; }
+[data-theme="dark"] .text-gray-600 { color: var(--text-secondary) !important; }
+[data-theme="dark"] .text-gray-500 { color: var(--text-secondary) !important; }
+[data-theme="dark"] .text-gray-400 { color: var(--text-muted) !important; }
+[data-theme="dark"] .text-gray-300 { color: var(--text-muted) !important; }
+
+/* ── Backgrounds ── */
+[data-theme="dark"] .bg-white { background: var(--surface) !important; }
+[data-theme="dark"] .bg-gray-100 { background: var(--surface-2) !important; }
+[data-theme="dark"] .bg-gray-50  { background: var(--surface-2) !important; }
+
+/* ── Borders ── */
+[data-theme="dark"] .border-gray-100,
+[data-theme="dark"] .border-gray-50,
+[data-theme="dark"] .border-gray-200 { border-color: var(--border) !important; }
+
+/* ── Sidebar ── */
+[data-theme="dark"] aside { background: var(--surface); border-color: var(--border); }
+[data-theme="dark"] aside a:hover { background: rgba(12,122,62,0.2); color: #4ade80; }
+
+/* ── Search bar ── */
+[data-theme="dark"] nav .bg-white { background: var(--input-bg) !important; box-shadow: none; }
+[data-theme="dark"] nav input { color: var(--input-text); }
+
+/* ── Product cards ── */
+[data-theme="dark"] .product-card { background: var(--surface); }
+[data-theme="dark"] .product-img-wrap { background: var(--surface-2); }
+
+/* ── Modal ── */
+[data-theme="dark"] .modal-box { background: var(--surface); color: var(--text-primary); }
+[data-theme="dark"] .modal-img-wrap { background: var(--surface-2); }
+[data-theme="dark"] #modalCategory { background: rgba(12,122,62,0.25); }
+
+/* ── Cart drawer ── */
+[data-theme="dark"] #cartDrawer { background: var(--surface); color: var(--text-primary); }
+[data-theme="dark"] #cartFooter hr { border-color: var(--border); }
+
+/* ── Account dropdown ── */
+[data-theme="dark"] #accountMenu { background: var(--surface); }
+[data-theme="dark"] #accountMenu .bg-gray-50 { background: var(--surface-2) !important; }
+[data-theme="dark"] #accountMenu button:hover { background: var(--surface-2) !important; }
+
+/* ── Dark mode button ── */
+#dmBtn {
+    background: var(--dm-btn-bg);
+    color: var(--dm-btn-color);
+    border-color: rgba(255,255,255,0.2);
+}
+
+
+        
     </style>
 </head>
 
@@ -121,7 +256,8 @@
                     <div class="text-[#a8e6c1] text-[11px] font-semibold">Store</div>
                 </div>
             </a>
-            <div class="bg-white/15 rounded-full px-3.5 py-1.5 flex items-center gap-1.5 text-white text-[13px] font-bold">
+            <div
+                class="bg-white/15 rounded-full px-3.5 py-1.5 flex items-center gap-1.5 text-white text-[13px] font-bold">
                 ⚡ Delivery in 30 mins &nbsp;·&nbsp; Kathmandu, NP
             </div>
         </div>
@@ -137,27 +273,62 @@
 
         <div class="flex items-center gap-3">
             <div class="relative" id="accountWrapper">
-                <button id="accountBtn" onclick="toggleAccountMenu()"
-                    class="bg-white/15 border-none rounded-xl px-4 py-2 text-white text-[13px] font-bold cursor-pointer font-[Nunito] flex items-center gap-1.5">
-                    👤 Account ▾
-                </button>
-                <div id="accountMenu"
-                    class="hidden absolute top-[calc(100%+10px)] right-0 bg-white rounded-xl shadow-2xl min-w-[180px] z-[200] overflow-hidden">
-                    <div class="px-4 py-3.5 border-b border-gray-100 font-black text-[13px] text-gray-700 bg-gray-50">👤 My Account</div>
-                    <button class="flex items-center gap-2.5 px-4 py-3 text-sm font-bold text-gray-600 cursor-pointer hover:bg-gray-50 w-full text-left border-none bg-transparent font-[Nunito]">🙍 Profile</button>
-                    <button class="flex items-center gap-2.5 px-4 py-3 text-sm font-bold text-gray-600 cursor-pointer hover:bg-gray-50 w-full text-left border-none bg-transparent font-[Nunito]">📦 My Orders</button>
-                    <hr class="border-t border-gray-100 m-0">
-                    <form action="/logout" method="POST">
-                        @csrf
-                        <button type="submit" class="flex items-center gap-2.5 px-4 py-3 text-sm font-bold text-red-600 cursor-pointer hover:bg-red-50 w-full text-left border-none bg-transparent font-[Nunito]">🚪 Logout</button>
-                    </form>
+                @guest
+                    @guest
+                        <div class="flex flex-row gap-2">
+                            <a href="{{ route('login') }}"
+                                class="flex items-center gap-2.5 px-4 py-3 text-md font-bold text-white hover:bg-green-500 hover:rounded-2xl ">🔑
+                                Login</a>
+                            <a href="{{ route('showregisterUser') }}"
+                                class="flex items-center justify-between gap-2.5 px-4 py-3 text-md font-bold text-white hover:bg-green-500 hover:rounded-2xl">📝
+                                Register</a>
+                            <button onclick="toggleDarkMode()" id="dmBtn"
+                                class="rounded-xl px-3.5 py-2 text-[13px] font-bold cursor-pointer font-nunito flex items-center gap-1.5 transition-colors border-theme border"
+                                style="background:var(--input-bg);color:var(--text2);">🌙 Dark</button>
+                        </div>
+                    @endguest
+
+                @endguest
+
+                @auth
+                    <button id="accountBtn" onclick="toggleAccountMenu()"
+                        class="bg-white/15 border-none rounded-xl px-4 py-2 text-white text-[13px] font-bold cursor-pointer font-[Nunito] flex items-center gap-1.5">
+                        👤 Account ▾
+                    </button>
+                    <div id="accountMenu"
+                        class="hidden absolute top-[calc(100%+10px)] right-0 bg-white rounded-xl shadow-2xl min-w-[180px] z-[200] overflow-hidden">
+                        <div class="px-4 py-3.5 border-b border-gray-100 font-black text-[13px] text-gray-700 bg-gray-50">👤
+                            My Account</div>
+
+                        <button
+                            class="flex items-center gap-2.5 px-4 py-3 text-sm font-bold text-gray-600 cursor-pointer hover:bg-gray-50 w-full text-left border-none bg-transparent font-[Nunito]">🙍
+                            Profile</button>
+                        <button
+                            class="flex items-center gap-2.5 px-4 py-3 text-sm font-bold text-gray-600 cursor-pointer hover:bg-gray-50 w-full text-left border-none bg-transparent font-[Nunito]">📦
+                            My Orders</button>
+                        <hr class="border-t border-gray-100 m-0">
+                        <form action="/logout" method="POST">
+
+                            @csrf
+                            <button type="submit"
+                                class="flex items-center gap-2.5 px-4 py-3 text-sm font-bold text-red-600 cursor-pointer hover:bg-red-50 w-full text-left border-none bg-transparent font-[Nunito]">🚪
+                                Logout</button>
+                        </form>
+                        <button onclick="toggleDarkMode()" id="dmBtn"
+                            class="rounded-xl px-3.5 py-2 text-[13px] font-bold cursor-pointer font-nunito flex items-center gap-1.5 transition-colors border-theme border"
+                            style="background:var(--input-bg);color:var(--text2);">🌙 Dark</button>
+                    @endauth
+
+
                 </div>
             </div>
 
             <button onclick="openCart()"
                 class="bg-white text-[#0c7a3e] border-none rounded-xl px-4 py-2 text-[13px] font-extrabold cursor-pointer font-[Nunito] flex items-center gap-2 relative">
                 🛒 Cart
-                <div id="cartBadge" class="cart-badge bg-red-500 text-white rounded-full w-5 h-5 text-[11px] font-extrabold items-center justify-center">0</div>
+                <div id="cartBadge"
+                    class="cart-badge bg-red-500 text-white rounded-full w-5 h-5 text-[11px] font-extrabold items-center justify-center">
+                    0</div>
             </button>
         </div>
     </nav>
@@ -166,14 +337,14 @@
     <div class="flex min-h-[calc(100vh-64px)]">
 
         <!-- Sidebar -->
-        <aside class="w-[220px] shrink-0 bg-white px-4 py-6 border-r border-gray-100 sticky top-16 h-[calc(100vh-64px)] overflow-y-auto">
+        <aside
+            class="w-[220px] shrink-0 bg-white px-4 py-6 border-r border-gray-100 sticky top-16 h-[calc(100vh-64px)] overflow-y-auto">
             <div class="text-xs font-black text-gray-400 tracking-widest uppercase mb-3">Categories</div>
-            @foreach([['All','🏪','All Products'],['Vegetables','🥦','Vegetables'],['Fruits','🍎','Fruits'],['Dairy','🥛','Dairy'],['Bakery','🍞','Bakery'],['Beverages','🧃','Beverages'],['Snacks','🍫','Snacks'],['Meat','🍗','Meat & Fish'],['Personal Care','🧴','Personal Care']] as [$val,$emoji,$label])
-            <button
-                class="cat-btn {{ $val==='All' ? 'active bg-[#0c7a3e] text-white' : 'bg-transparent text-gray-600 hover:bg-[#f0faf4] hover:text-[#0c7a3e]' }} flex items-center gap-2.5 w-full border-none rounded-xl px-3 py-2.5 text-sm font-bold cursor-pointer font-[Nunito] transition-all mb-1 text-left"
-                onclick="setCategory('{{ $val }}', this)">
-                <span class="text-lg w-6 text-center">{{ $emoji }}</span> {{ $label }}
-            </button>
+            @foreach ([['All', '🏪', 'All Products'], ['Vegetables', '🥦', 'Vegetables'], ['Fruits', '🍎', 'Fruits'], ['Dairy', '🥛', 'Dairy'], ['Bakery', '🍞', 'Bakery'], ['Beverages', '🧃', 'Beverages'], ['Snacks', '🍫', 'Snacks'], ['Meat', '🍗', 'Meat & Fish'], ['Personal Care', '🧴', 'Personal Care']] as [$val, $emoji, $label])
+                <a href="{{ $val === 'All' ? route('index') : route('category', $val) }}"
+                    class="cat-btn {{ $category === $val ? 'bg-[#0c7a3e] text-white' : 'bg-transparent text-gray-600 hover:bg-[#f0faf4] hover:text-[#0c7a3e]' }} flex items-center gap-2.5 w-full rounded-xl px-3 py-2.5 text-sm font-bold font-[Nunito] transition-all mb-1">
+                    <span class="text-lg w-6 text-center">{{ $emoji }}</span> {{ $label }}
+                </a>
             @endforeach
         </aside>
 
@@ -181,34 +352,47 @@
         <main class="flex-1 px-8 pt-7 pb-28 overflow-y-auto">
 
             <!-- Banner -->
-            <div class="bg-gradient-to-br from-[#0c7a3e] to-[#1aad5e] rounded-2xl px-10 py-8 flex items-center justify-between mb-8 relative overflow-hidden">
+            <div
+                class="bg-gradient-to-br from-[#0c7a3e] to-[#1aad5e] rounded-2xl px-10 py-8 flex items-center justify-between mb-8 relative overflow-hidden">
                 <div class="absolute -right-8 -top-8 w-44 h-44 bg-white/[0.07] rounded-full"></div>
                 <div class="absolute right-24 -bottom-10 w-28 h-28 bg-white/[0.05] rounded-full"></div>
                 <div class="relative z-10">
                     <div class="text-yellow-300 text-xs font-extrabold tracking-widest mb-2">🎉 LIMITED TIME OFFER</div>
-                    <div class="text-white text-3xl font-black leading-tight mb-4">Fresh Vegetables<br>Up to 30% Off</div>
-                    <button class="bg-white text-[#0c7a3e] border-none rounded-xl px-6 py-2.5 text-sm font-extrabold cursor-pointer font-[Nunito]">Shop Now →</button>
+                    <div class="text-white text-3xl font-black leading-tight mb-4">Fresh Vegetables<br>Up to 30% Off
+                    </div>
+                    <button
+                        class="bg-white text-[#0c7a3e] border-none rounded-xl px-6 py-2.5 text-sm font-extrabold cursor-pointer font-[Nunito]">Shop
+                        Now →</button>
                 </div>
             </div>
 
             <!-- Products Header -->
             <div class="flex items-center justify-between mb-5">
-                <div class="font-black text-xl text-gray-900">
+                <div class="font-black text-xl text-yellow-500">
                     All Products <span id="productCount" class="font-semibold text-sm text-gray-400 ml-2"></span>
                 </div>
-                <div class="text-[#0c7a3e] text-[13px] font-bold cursor-pointer">View All →</div>
             </div>
 
             <!-- Products Grid -->
-            <div id="productsGrid" class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(190px, 1fr))"></div>
-
-            <!-- Empty State -->
-            <div id="emptyState" class="hidden text-center py-16 text-gray-300">
-                <div class="text-6xl">🔍</div>
-                <p class="mt-3 font-bold text-base">No products found</p>
+            <div id="productsGrid" class="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"></div>
+            <!-- Pagination -->
+            <div class="flex justify-center mt-8 py-4">
+                {{ $products->links() }}
             </div>
-        </main>
     </div>
+
+
+    <!-- Empty State -->
+    <div id="emptyState" class="hidden text-center py-16 text-gray-300">
+        <div class="text-6xl">🔍</div>
+        <p class="mt-3 font-bold text-base">No products found</p>
+    </div>
+    </main>
+    </div>
+
+
+
+
 
     <!-- ── PRODUCT DETAIL MODAL ── -->
     <div id="productModal" class="modal-backdrop" onclick="handleModalBackdropClick(event)">
@@ -229,7 +413,9 @@
             <!-- Right: Details -->
             <div class="flex-1 flex flex-col p-8 overflow-y-auto">
                 <!-- Category pill -->
-                <div id="modalCategory" class="inline-flex items-center gap-1.5 bg-[#e8f5ee] text-[#0c7a3e] text-[11px] font-extrabold px-3 py-1 rounded-full mb-3 self-start"></div>
+                <div id="modalCategory"
+                    class="inline-flex items-center gap-1.5 bg-[#e8f5ee] text-[#0c7a3e] text-[11px] font-extrabold px-3 py-1 rounded-full mb-3 self-start">
+                </div>
 
                 <!-- Name -->
                 <h2 id="modalName" class="text-2xl font-black text-gray-900 leading-tight mb-1"></h2>
@@ -252,6 +438,8 @@
                     <p id="modalDesc" class="text-sm text-gray-600 font-semibold leading-relaxed"></p>
                 </div>
 
+
+
                 <!-- Divider -->
                 <div class="border-t border-gray-100 mb-6"></div>
 
@@ -260,7 +448,8 @@
                     <div class="text-xs font-black text-gray-400 tracking-widest uppercase mb-3">Quantity</div>
                     <div class="flex items-center gap-4 mb-5">
                         <button class="qty-btn" onclick="modalDecreaseQty()">−</button>
-                        <span id="modalQty" class="text-xl font-black text-gray-900 min-w-[32px] text-center">1</span>
+                        <span id="modalQty"
+                            class="text-xl font-black text-gray-900 min-w-[32px] text-center">1</span>
                         <button class="qty-btn" onclick="modalIncreaseQty()">+</button>
                         <span class="text-sm text-gray-400 font-semibold">× <span id="modalUnitSmall"></span></span>
                     </div>
@@ -279,18 +468,22 @@
         </div>
     </div>
 
+
     <!-- ── Cart Drawer Overlay ── -->
     <div id="drawerOverlay" onclick="closeCart()" class="hidden fixed inset-0 bg-black/45 z-[300]"></div>
 
     <!-- ── Cart Drawer ── -->
-    <div id="cartDrawer" class="drawer fixed top-0 -right-[420px] w-[400px] h-screen bg-white z-[301] flex flex-col shadow-2xl">
+    <div id="cartDrawer"
+        class="drawer fixed top-0 -right-[420px] w-[400px] h-screen bg-white z-[301] flex flex-col shadow-2xl">
         <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
             <div class="font-black text-xl">🛒 Your Cart</div>
-            <button onclick="closeCart()" class="bg-gray-100 border-none rounded-full w-9 h-9 text-lg cursor-pointer font-[Nunito]">✕</button>
+            <button onclick="closeCart()"
+                class="bg-gray-100 border-none rounded-full w-9 h-9 text-lg cursor-pointer font-[Nunito]">✕</button>
         </div>
         <div id="cartBody" class="flex-1 overflow-y-auto py-2"></div>
         <div id="cartFooter" class="px-6 py-5 border-t border-gray-100"></div>
     </div>
+
 
     <!-- ── Cart Bottom Bar ── -->
     <div id="cartBottomBar"
@@ -300,8 +493,10 @@
             <div id="cbbPrice" class="text-2xl font-black">RS 0</div>
         </div>
         <button onclick="openCart()"
-            class="bg-white text-[#0c7a3e] border-none rounded-xl px-7 py-3 text-[15px] font-extrabold cursor-pointer font-[Nunito]">View Cart &amp; Checkout →</button>
+            class="bg-white text-[#0c7a3e] border-none rounded-xl px-7 py-3 text-[15px] font-extrabold cursor-pointer font-[Nunito]">View
+            Cart &amp; Checkout →</button>
     </div>
+
 
     <script>
         // ── Placeholder HTML ──
@@ -322,17 +517,46 @@
 </svg>`;
 
         const tagMeta = {
-            'Fresh':       { bg: '#e8f5e9', color: '#2e7d32' },
-            'New':         { bg: '#e3f2fd', color: '#0d47a1' },
-            'Organic':     { bg: '#f3e5f5', color: '#6a1b9a' },
-            'Best Seller': { bg: '#fff3e0', color: '#e65100' },
-            'Popular':     { bg: '#fce4ec', color: '#880e4f' },
-            'Healthy':     { bg: '#e0f2f1', color: '#004d40' },
+            'Fresh': {
+                bg: '#e8f5e9',
+                color: '#2e7d32'
+            },
+            'New': {
+                bg: '#e3f2fd',
+                color: '#0d47a1'
+            },
+            'Organic': {
+                bg: '#f3e5f5',
+                color: '#6a1b9a'
+            },
+            'Best Seller': {
+                bg: '#fff3e0',
+                color: '#e65100'
+            },
+            'Popular': {
+                bg: '#fce4ec',
+                color: '#880e4f'
+            },
+            'Healthy': {
+                bg: '#e0f2f1',
+                color: '#004d40'
+            },
         };
 
-        const catEmoji = {Vegetables:'🥦',Fruits:'🍎',Dairy:'🥛',Bakery:'🍞',Beverages:'🧃',Snacks:'🍫',Meat:'🍗','Personal Care':'🧴'};
+        const catEmoji = {
+            Vegetables: '🥦',
+            Fruits: '🍎',
+            Dairy: '🥛',
+            Bakery: '🍞',
+            Beverages: '🧃',
+            Snacks: '🍫',
+            Meat: '🍗',
+            'Personal Care': '🧴'
+        };
 
-        const products = @json($allProducts);
+        const products = @json($products->items());
+
+
         let cart = {};
         let activeCategory = 'All';
 
@@ -340,9 +564,9 @@
         let modalProduct = null;
         let modalQtyVal = 1;
 
-        /* ──────────────────────────────
+        /* 
            PRODUCT DETAIL MODAL
-        ────────────────────────────── */
+        */
         function openProductModal(p) {
             modalProduct = p;
             modalQtyVal = cart[p.id] || 1;
@@ -385,11 +609,14 @@
             const stockEl = document.getElementById('modalStock');
             const qty = p.stock_quantity ?? null;
             if (qty !== null) {
-                const color = qty === 0 ? 'bg-red-100 text-red-600' : qty < 10 ? 'bg-orange-100 text-orange-600' : 'bg-green-100 text-green-700';
-                const label = qty === 0 ? '❌ Out of Stock' : qty < 10 ? `⚠️ Only ${qty} left` : `✅ In Stock (${qty} available)`;
+                const color = qty === 0 ? 'bg-red-100 text-red-600' : qty < 10 ? 'bg-orange-100 text-orange-600' :
+                    'bg-green-100 text-green-700';
+                const label = qty === 0 ? '❌ Out of Stock' : qty < 10 ? `⚠️ Only ${qty} left` :
+                    `✅ In Stock (${qty} available)`;
                 stockEl.innerHTML = `<span class="text-xs font-extrabold px-3 py-1 rounded-full ${color}">${label}</span>`;
             } else {
-                stockEl.innerHTML = `<span class="text-xs font-extrabold px-3 py-1 rounded-full bg-green-100 text-green-700">✅ In Stock</span>`;
+                stockEl.innerHTML =
+                    `<span class="text-xs font-extrabold px-3 py-1 rounded-full bg-green-100 text-green-700">✅ In Stock</span>`;
             }
 
             // Description
@@ -452,8 +679,24 @@
             btn.textContent = '✅ Added to Cart!';
             btn.style.background = '#0a6633';
             setTimeout(() => {
-                btn.innerHTML = `🛒 Add to Cart — RS <span id="modalTotalPrice">${(parseFloat(modalProduct.price) * modalQtyVal).toFixed(2)}</span>`;
+                btn.innerHTML =
+                    `🛒 Add to Cart — RS <span id="modalTotalPrice">${(parseFloat(modalProduct.price) * modalQtyVal).toFixed(2)}</span>`;
             }, 1200);
+        }
+
+        // dark mode on and off 
+
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const isDark = html.getAttribute('data-theme') === 'dark';
+            html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            document.getElementById('dmBtn').textContent = isDark ? '🌙 Dark' : '☀️ Light';
+            localStorage.setItem('theme', isDark ? 'light' : 'dark');
+        }
+        const saved = localStorage.getItem('theme');
+        if (saved) {
+            document.documentElement.setAttribute('data-theme', saved);
+            document.getElementById('dmBtn').textContent = saved === 'dark' ? '☀️ Light' : '🌙 Dark';
         }
 
         /* ──────────────────────────────
@@ -494,22 +737,22 @@
 
         /* ── Card image HTML ── */
         function cardImageHtml(p) {
-            const tagHtml = p.tag && tagMeta[p.tag]
-                ? `<div class="absolute top-2.5 left-2.5 tag-badge z-10" style="background:${tagMeta[p.tag].bg};color:${tagMeta[p.tag].color}">${p.tag}</div>`
-                : '';
+            const tagHtml = p.tag && tagMeta[p.tag] ?
+                `<div class="absolute top-2.5 left-2.5 tag-badge z-10" style="background:${tagMeta[p.tag].bg};color:${tagMeta[p.tag].color}">${p.tag}</div>` :
+                '';
             const hasImage = p.image && p.image !== 'YOUR_IMAGE_PATH_HERE';
-            const imgContent = hasImage
-                ? `<img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover block">`
-                : placeholderHTML;
+            const imgContent = hasImage ?
+                `<img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover block">`:
+                placeholderHTML;
             return `<div class="product-img-wrap bg-[#f0faf4] h-[150px] flex items-center justify-center relative overflow-hidden">${tagHtml}${imgContent}</div>`;
         }
 
         /* ── Cart thumb ── */
         function cartThumbHtml(p) {
             const hasImage = p.image && p.image !== 'YOUR_IMAGE_PATH_HERE';
-            return hasImage
-                ? `<img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover">`
-                : cartPlaceholderSVG;
+            return hasImage ?
+                `<img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover">` :
+                cartPlaceholderSVG;
         }
 
         /* ── Render Products ── */
@@ -527,9 +770,9 @@
 
             grid.innerHTML = list.map(p => {
                 const qty = cart[p.id] || 0;
-                const actionHtml = qty === 0
-                    ? `<button class="bg-[#0c7a3e] hover:bg-[#0a6633] text-white border-none rounded-lg px-4 py-1.5 text-[13px] font-extrabold cursor-pointer font-[Nunito]" onclick="event.stopPropagation(); addToCart(${p.id})">ADD</button>`
-                    : `<div class="flex items-center gap-2 bg-[#0c7a3e] rounded-lg px-2 py-1.5" onclick="event.stopPropagation()">
+                const actionHtml = qty === 0 ?
+                    `<button class="bg-[#0c7a3e] hover:bg-[#0a6633] text-white border-none rounded-lg px-4 py-1.5 text-[13px] font-extrabold cursor-pointer font-[Nunito]" onclick="event.stopPropagation(); addToCart(${p.id})">ADD</button>` :
+                    `<div class="flex items-center gap-2 bg-[#0c7a3e] rounded-lg px-2 py-1.5" onclick="event.stopPropagation()">
                         <button class="bg-transparent border-none text-white text-xl cursor-pointer leading-none font-black font-[Nunito] p-0" onclick="removeFromCart(${p.id})">−</button>
                         <span class="text-white text-sm font-extrabold min-w-[18px] text-center">${qty}</span>
                         <button class="bg-transparent border-none text-white text-xl cursor-pointer leading-none font-black font-[Nunito] p-0" onclick="addToCart(${p.id})">+</button>
@@ -568,9 +811,9 @@
             const el = document.getElementById('action-' + id);
             if (!el) return;
             const qty = cart[id] || 0;
-            el.innerHTML = qty === 0
-                ? `<button class="bg-[#0c7a3e] hover:bg-[#0a6633] text-white border-none rounded-lg px-4 py-1.5 text-[13px] font-extrabold cursor-pointer font-[Nunito]" onclick="event.stopPropagation(); addToCart(${id})">ADD</button>`
-                : `<div class="flex items-center gap-2 bg-[#0c7a3e] rounded-lg px-2 py-1.5" onclick="event.stopPropagation()">
+            el.innerHTML = qty === 0 ?
+                `<button class="bg-[#0c7a3e] hover:bg-[#0a6633] text-white border-none rounded-lg px-4 py-1.5 text-[13px] font-extrabold cursor-pointer font-[Nunito]" onclick="event.stopPropagation(); addToCart(${id})">ADD</button>` :
+                `<div class="flex items-center gap-2 bg-[#0c7a3e] rounded-lg px-2 py-1.5" onclick="event.stopPropagation()">
                     <button class="bg-transparent border-none text-white text-xl cursor-pointer leading-none font-black font-[Nunito] p-0" onclick="removeFromCart(${id})">−</button>
                     <span class="text-white text-sm font-extrabold min-w-[18px] text-center">${qty}</span>
                     <button class="bg-transparent border-none text-white text-xl cursor-pointer leading-none font-black font-[Nunito] p-0" onclick="addToCart(${id})">+</button>
@@ -614,7 +857,8 @@
             const entries = Object.entries(cart);
 
             if (entries.length === 0) {
-                body.innerHTML = `<div class="text-center py-16 px-6 text-gray-300"><div class="text-6xl">🛒</div><p class="mt-3 font-bold text-base">Your cart is empty</p></div>`;
+                body.innerHTML =
+                    `<div class="text-center py-16 px-6 text-gray-300"><div class="text-6xl">🛒</div><p class="mt-3 font-bold text-base">Your cart is empty</p></div>`;
                 footer.innerHTML = '';
                 return;
             }
@@ -646,7 +890,8 @@
             }).join('');
 
             const tax = Math.round(totalPrice * 0.05);
-            footer.innerHTML = `
+            footer.innerHTML =
+                `
 <div class="flex justify-between mb-1.5">
     <span class="text-gray-400 text-sm">Subtotal</span>
     <strong class="font-bold text-sm">RS ${totalPrice.toFixed(2)}</strong>
@@ -667,8 +912,15 @@
 <button class="bg-[#0c7a3e] text-white border-none rounded-xl py-4 px-6 w-full font-[Nunito] text-base font-extrabold cursor-pointer">Proceed to Checkout →</button>`;
         }
 
-        function cartAdd(id) { addToCart(id); renderCartDrawer(); }
-        function cartRemove(id) { removeFromCart(id); renderCartDrawer(); }
+        function cartAdd(id) {
+            addToCart(id);
+            renderCartDrawer();
+        }
+
+        function cartRemove(id) {
+            removeFromCart(id);
+            renderCartDrawer();
+        }
 
         // Keyboard close
         document.addEventListener('keydown', e => {
@@ -678,4 +930,5 @@
         renderProducts(products);
     </script>
 </body>
+
 </html>

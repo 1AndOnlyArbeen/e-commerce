@@ -4,16 +4,23 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Product;
-use Illuminate\Routing\Controller;
 
 class HomeController
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request, $category = 'All')
+
     {
-        $allProducts = Product::all()->map(function ($p) {
+
+     $query = Product::query();
+
+    if ($category !== 'All') {
+        $query->where('category', $category);
+    }
+        $products = $query->paginate(15);
+        $products->getCollection()->transform (function ($p) {
             return [
                 'id' => $p->id,
                 'name' => $p->name,
@@ -26,10 +33,10 @@ class HomeController
                 'tagColor' => '#2e7d32',
             ];
         });
-        $byCategory = Product::all()->groupBy('category');
 
-        return view('welcome', compact('allProducts', 'byCategory'));
+        return view('welcome', compact('products','category'));
     }
+    
 
     public function create() {}
 

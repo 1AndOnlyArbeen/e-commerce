@@ -74,7 +74,7 @@ class UserController extends Controller
         Auth::logout();
         $req->session()->regenerate();
 
-        return redirect('/login')->with('success', 'logout successfully');
+        return redirect('/')->with('success', 'logout successfully');
     }
 
 
