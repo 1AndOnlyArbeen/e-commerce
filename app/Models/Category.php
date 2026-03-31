@@ -10,11 +10,12 @@ class Category extends Model
         'name',
         'slug',
         'image',
+        'description',
         'is_active',
     ];
 
     public function products()
     {
-        return $this->hasMany(Product::class);
+        return $this->hasMany(Product::class, 'category', 'name');
     }
 }

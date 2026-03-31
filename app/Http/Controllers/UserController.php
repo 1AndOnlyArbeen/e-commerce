@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
-
 class UserController extends Controller
 {
     public function showregisterUser()
@@ -55,11 +54,11 @@ class UserController extends Controller
 
         $user = User::where('email', $validation['email'])->first();
 
-        if (!$user) {
+        if (! $user) {
             return back()->withErrors(['email' => 'email not found']);
         }
 
-        if (!Hash::check($validation['password'], $user->password)) {
+        if (! Hash::check($validation['password'], $user->password)) {
             return back()->withErrors(['password' => 'Incorrect password'])->withInput();
         }
 
@@ -76,7 +75,4 @@ class UserController extends Controller
 
         return redirect('/')->with('success', 'logout successfully');
     }
-
-
-
 }

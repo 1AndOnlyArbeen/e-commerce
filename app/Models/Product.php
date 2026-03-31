@@ -24,11 +24,11 @@ class Product extends Model
     ];
 
     protected $casts = [
-        'image'       => 'array',   // since it's json in migration
-        'is_active'   => 'boolean',
+        'image' => 'array',   // since it's json in migration
+        'is_active' => 'boolean',
         'is_featured' => 'boolean',
-        'in_stock'    => 'boolean',
-        'on_sale'     => 'boolean',
+        'in_stock' => 'boolean',
+        'on_sale' => 'boolean',
     ];
 
     public function category()

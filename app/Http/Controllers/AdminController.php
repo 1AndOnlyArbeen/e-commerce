@@ -2,124 +2,106 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Product;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class AdminController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-
-
-
-    public function index(Request $request ,$category = "All")
+    public function index(Request $request, $category = 'All')
     {
-        //adding the pagination 
+
+        // adding the pagination
         $user = Auth::user();
 
         // if not logged in OR not admin → redirect to store
-        if (!$user || $user->role !== 'admin') {
+        if (! $user || $user->role !== 'admin') {
             return redirect('/store');
         }
 
-
-
         $query = Product::query();
-       if ($category !== 'All') {
-        $query->where('category', $category);
-    }
+        if ($category !== 'All') {
+            $query->where('category', $category);
+        }
 
         $products = $query->paginate(15);
-           if ($request->ajax()) {
-        return response()->json([
-            'products' => $products->items(),
-            'pagination' => (string) $products->links(),
-            'total' => $products->total(),
-        ]);
-    }
-
-
-
+        if ($request->ajax()) {
+            return response()->json([
+                'products' => $products->items(),
+                'pagination' => (string) $products->links(),
+                'total' => $products->total(),
+            ]);
+        }
 
         $allProduct = Product::all();
         $byCategory = Product::all()->groupBy('category');
+        $categories = Category::withCount('products')->get();
 
-        return view('admin', compact('allProduct', 'byCategory','products'));
+        return view('admin', compact('allProduct', 'byCategory', 'products', 'categories'));
     }
 
     public function create(Request $request) {}
 
-
     public function store(Request $request)
-
-
     {
 
         $request->validate([
-            'name'           => 'required|string|max:60',
-            'price'          => 'required|numeric|min:0',
-            'category'       => 'required|string',
-            'unit'           => 'required|string',
-            'image'          => 'nullable|image|max:20000',
+            'name' => 'required|string|max:60',
+            'price' => 'required|numeric|min:0',
+            'category' => 'required|string',
+            'unit' => 'required|string',
+            'image' => 'nullable|image|max:20000',
             'stock_quantity' => 'nullable|integer|min:0',
         ]);
 
         $slug = Str::slug($request->name);
         $count = Product::where('slug', $slug)->count();
         if ($count > 0) {
-            $slug = $slug . '-' . ($count + 1);
+            $slug = $slug.'-'.($count + 1);
         }
 
         $imagePath = null;
         if ($request->hasFile('image')) {
-            $fileName = time() . '_' . $request->file('image')->getClientOriginalName();
+            $fileName = time().'_'.$request->file('image')->getClientOriginalName();
             $imagePath = $request->file('image')->storeAs('images', $fileName, 'public');
         }
 
         Product::create([
-            'name'           => $request->name,
-            'slug'           => $slug,
-            'price'          => $request->price,
-            'category'       => $request->category,
-            'unit'           => $request->unit,
-            'description'    => $request->description,
-            'tag'            => $request->tag,
+            'name' => $request->name,
+            'slug' => $slug,
+            'price' => $request->price,
+            'category' => $request->category,
+            'unit' => $request->unit,
+            'description' => $request->description,
+            'tag' => $request->tag,
             'stock_quantity' => $request->stock_quantity ?? 0,
-            'image'          => $imagePath,
-            'is_active'      => true,
-            'in_stock'       => true,
-            'on_sale'        => false,
+            'image' => $imagePath,
+            'is_active' => true,
+            'in_stock' => true,
+            'on_sale' => false,
         ]);
+
         return redirect('/admin');
     }
 
-
     public function show(string $id) {}
 
-
     public function edit(string $id)
-
     {
-        // step to edit the product 
-
+        // step to edit the product
 
         $Products = Product::findOrFail($id);
+
         return view('admin');
     }
-
-
-
-
 
     public function update(Request $request, string $id)
     {
 
-
-        // product edit and image also edit 
+        // product edit and image also edit
 
         $Products = Product::findOrFail($id);
         $imagePath = $Products->image;
@@ -127,12 +109,12 @@ class AdminController extends Controller
         if ($request->hasFile('image')) {
 
             // delete old image
-            if ($Products->image && file_exists(storage_path('app/public/' . $Products->image))) {
-                unlink(storage_path('app/public/' . $Products->image));
+            if ($Products->image && file_exists(storage_path('app/public/'.$Products->image))) {
+                unlink(storage_path('app/public/'.$Products->image));
             }
 
             // upload new image
-            $fileName = time() . '_' . $request->file('image')->getClientOriginalName();
+            $fileName = time().'_'.$request->file('image')->getClientOriginalName();
 
             $imagePath = $request->file('image')->storeAs(
                 'images',
@@ -140,7 +122,6 @@ class AdminController extends Controller
                 'public'
             );
         }
-
 
         $Products->update([
             'name' => $request->name,
@@ -152,27 +133,25 @@ class AdminController extends Controller
             'unit' => $request->unit,
             'image' => $imagePath,
 
-
         ]);
-
 
         return redirect('/admin');
     }
-
 
     public function destroy(string $id)
     {
         $products = Product::findOrFail($id);
 
-        // delete the image and data of that id 
+        // delete the image and data of that id
 
-        if ($products->image && file_exists(storage_path('app/public/' . $products->image))) {
-            unlink(storage_path('app/public/' . $products->image));
+        if ($products->image && file_exists(storage_path('app/public/'.$products->image))) {
+            unlink(storage_path('app/public/'.$products->image));
         }
 
-        //deleting from database 
+        // deleting from database
 
         $products->delete();
+
         return redirect('admin');
     }
 }

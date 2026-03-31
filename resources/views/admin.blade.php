@@ -637,9 +637,10 @@
                 </div>
                 <div id="productsTableBody"></div>
                 {{-- pagination  --}}
-                <div id="paginationContainer" class="flex justify-center mt-4 py-4" style="border-top:1px solid var(--border);">
-    {{ $products->links() }}
-</div>
+                <div id="paginationContainer" class="flex justify-center mt-4 py-4"
+                    style="border-top:1px solid var(--border);">
+                    {{ $products->links() }}
+                </div>
 
             </div>
 
@@ -681,7 +682,43 @@
                 </div>
                 <button onclick="openCatModal()" class="btn-primary flex items-center gap-2">➕ Add Category</button>
             </div>
-            <div class="grid grid-cols-3 gap-4" id="categoriesGrid"></div>
+            <div class="grid grid-cols-3 gap-4">
+
+                @foreach ($categories as $cat)
+                    <div class="card p-5 cat-card flex items-center gap-3 relative group">
+                        <div class="w-12 h-12">
+                            <img src="{{ asset('storage/' . $cat->image) }}" alt="{{ $cat->name }}"
+                                class="w-full h-full object-cover rounded-lg">
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-extrabold text-sm text-primary">{{ $cat->name }}</div>
+                            <div class="text-xs text-secondary">{{ $cat->products_count ?? 0 }} products</div>
+                            @if (!$cat->is_active)
+                                <div class="text-[10px] text-orange-500 font-bold">Hidden</div>
+                            @endif
+                        </div>
+                        <div class="cat-actions flex gap-1.5 absolute right-4 top-4">
+                            <button
+                                onclick="openEditCatModal({{ $cat->id }}, '{{ $cat->name }}', '{{ $cat->description }}', {{ $cat->is_active ? 'true' : 'false' }})"
+                                class="btn-edit text-[11px] px-2 py-1">✏️</button>
+                            <form action="{{ route('categories.destroy', $cat->id) }}" method="POST"
+                                class="m-0">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn-danger text-[11px] px-2 py-1">🗑️</button>
+                            </form>
+                        </div>
+                    </div>
+                @endforeach
+
+                <button onclick="openCatModal()"
+                    class="card p-5 flex flex-col items-center justify-center gap-2 text-secondary cursor-pointer hover-row"
+                    style="border:2px dashed var(--border);border-radius:16px;min-height:80px;">
+                    <div class="text-2xl">➕</div>
+                    <div class="text-sm font-bold">Add Category</div>
+                </button>
+            </div>
+
         </div>
 
         <!-- ══════════ BANNER & FEATURED ══════════ -->
@@ -1056,36 +1093,35 @@
                                     <div class="text-[11px] text-secondary font-bold text-right mt-1"
                                         id="descCounter">0 / 300</div>
                                 </div>
-                                <form action="action="{{ route('category') }}>
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-[13px] font-extrabold text-primary mb-1.5">Category
-                                            <span class="text-red-500">*</span></label>
-                                        <select name="category" id="productCategory" onchange="updatePreview()"
-                                            class="form-input">
-                                            <option value="">Select category…</option>
-                                            <option value="Vegetables">🥦 Vegetables</option>
-                                            <option value="Fruits">🍎 Fruits</option>
-                                            <option value="Dairy">🥛 Dairy</option>
-                                            <option value="Bakery">🍞 Bakery</option>
-                                            <option value="Beverages">🧃 Beverages</option>
-                                            <option value="Snacks">🍫 Snacks</option>
-                                            <option value="Meat">🍗 Meat &amp; Fish</option>
-                                            <option value="Personal Care">🧴 Personal Care</option>
-                                        </select>
-                                        <div class="text-[11px] text-red-500 font-bold mt-1 hidden" id="catError">
-                                            Please select a category</div>
+                                <form action="action="">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label
+                                                class="block text-[13px] font-extrabold text-primary mb-1.5">Category
+                                                <span class="text-red-500">*</span></label>
+                                            <select name="category" id="productCategory" onchange="updatePreview()"
+                                                class="form-input">
+                                                <option value="">Select category…</option>
+                                                @foreach ($categories as $cat)
+                                                    <option value="{{ $cat->name }}">{{ $cat->name}}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            <div class="text-[11px] text-red-500 font-bold mt-1 hidden"
+                                                id="catError">
+                                                Please select a category</div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[13px] font-extrabold text-primary mb-1.5">Unit /
+                                                Weight <span class="text-red-500">*</span></label>
+                                            <input type="text" name="unit" id="productUnit"
+                                                placeholder="e.g. 500g, 1L, 6 pcs" oninput="updatePreview()"
+                                                class="form-input">
+                                            <div class="text-[11px] text-red-500 font-bold mt-1 hidden"
+                                                id="unitError">
+                                                Unit is required</div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <label class="block text-[13px] font-extrabold text-primary mb-1.5">Unit /
-                                            Weight <span class="text-red-500">*</span></label>
-                                        <input type="text" name="unit" id="productUnit"
-                                            placeholder="e.g. 500g, 1L, 6 pcs" oninput="updatePreview()"
-                                            class="form-input">
-                                        <div class="text-[11px] text-red-500 font-bold mt-1 hidden" id="unitError">
-                                            Unit is required</div>
-                                    </div>
-                                </div>
                                 </form>
                             </div>
                         </div>
@@ -1247,6 +1283,8 @@
                                         class="tag-option" onchange="updateTag()">
                                     <label for="tagHealthy" class="tag-label"
                                         style="border-color:#b2dfdb;color:#004d40;">💚 Healthy</label>
+                                    <label for="tagHealthy" class="tag-label"
+                                        style="border-color:#b2dfdb;color:#e65100;">🇳🇵PopularfromNepal </label>
                                 </div>
                             </div>
                         </div>
@@ -1321,14 +1359,10 @@
                             <label class="block text-xs font-extrabold text-secondary mb-1.5">Category <span
                                     class="text-red-500">*</span></label>
                             <select name="category" id="edit_category" class="form-input">
-                                <option value="Vegetables">🥦 Vegetables</option>
-                                <option value="Fruits">🍎 Fruits</option>
-                                <option value="Dairy">🥛 Dairy</option>
-                                <option value="Bakery">🍞 Bakery</option>
-                                <option value="Beverages">🧃 Beverages</option>
-                                <option value="Snacks">🍫 Snacks</option>
-                                <option value="Meat">🍗 Meat &amp; Fish</option>
-                                <option value="Personal Care">🧴 Personal Care</option>
+                                @foreach ($categories as $cat)
+                                    <option value="{{ $cat->name }}">
+                                        {{ $cat->name }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div>
@@ -1347,6 +1381,7 @@
                             <option value="Best Seller">🔥 Best Seller</option>
                             <option value="Popular">⭐ Popular</option>
                             <option value="Healthy">💚 Healthy</option>
+                            <option value="PopularfromNepal">🇳🇵 PopularfromNepal</option>
                         </select>
                     </div>
                     <div>
@@ -1419,6 +1454,8 @@
         </div>
     </div>
 
+
+
     <!-- ══ CATEGORY MODAL ══ -->
     <div id="catModal" class="modal-backdrop">
         <div class="modal-box p-0 w-[440px]">
@@ -1428,28 +1465,52 @@
                     class="rounded-full w-8 h-8 text-lg cursor-pointer font-nunito text-primary border-none"
                     style="background:var(--input-bg);">✕</button>
             </div>
-            <div class="p-6 flex flex-col gap-4">
-                <div><label class="block text-xs font-extrabold text-secondary mb-1.5">Category Name <span
-                            class="text-red-500">*</span></label><input type="text" id="catName"
-                        placeholder="e.g. Frozen Foods" class="form-input"></div>
-                <div><label class="block text-xs font-extrabold text-secondary mb-1.5">Emoji Icon</label><input
-                        type="text" id="catEmoji" placeholder="e.g. 🧊" class="form-input"
-                        style="font-size:20px;"></div>
-                <div><label class="block text-xs font-extrabold text-secondary mb-1.5">Description <span
-                            class="text-[11px] font-semibold text-secondary">Optional</span></label>
-                    <textarea id="catDesc" rows="2" placeholder="Short description…" class="form-input" style="resize:none;"></textarea>
+            <form id="catForm" action="/categories" method="POST" enctype="multipart/form-data">
+                @csrf
+                <input type="hidden" name="_method" id="catMethod" value="POST">
+                <div class="p-6 flex flex-col gap-4">
+                    <div>
+                        <label name="name" class="block text-xs font-extrabold text-secondary mb-1.5">Name <span
+                                class="text-red-500">*</span>
+                            <span class="text-red-500 text-sm">
+                                @error('name')
+                                    {{ $message }}
+                                @enderror
+                            </span>
+                        </label>
+                        <input type="text" name="name" id="catName" placeholder="e.g. Frozen Foods"
+                            class="form-input">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs font-extrabold text-secondary mb-1.5">Description</label>
+                        <textarea name="description" id="catDesc" rows="2" class="form-input" style="resize:none;"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-extrabold text-secondary mb-1.5">Image</label>
+                        <input type="file" name="image" accept="image/*" class="form-input"
+                            style="padding:8px;">
+                        <span class="text-red-500 text-sm">
+                            @error('image')
+                                {{ $message }}
+                            @enderror
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <label class="switch">
+                            <input type="checkbox" name="is_active" id="catVisible" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span class="text-sm font-bold text-primary">Visible in store</span>
+                    </div>
                 </div>
-                <div class="flex items-center gap-3"><label class="switch"><input type="checkbox" id="catVisible"
-                            checked><span class="slider"></span></label><span
-                        class="text-sm font-bold text-primary">Visible in store</span></div>
-            </div>
-            <div class="px-6 pb-6 flex gap-3">
-                <button onclick="closeCatModal()" class="btn-ghost flex-1">Cancel</button>
-                <button onclick="saveCat()" class="btn-primary flex-1">✓ Save Category</button>
-            </div>
+                <div class="px-6 pb-6 flex gap-3">
+                    <button type="button" onclick="closeCatModal()" class="btn-ghost flex-1">Cancel</button>
+                    <button type="submit" class="btn-primary flex-1">✓ Save Category</button>
+                </div>
+            </form>
         </div>
     </div>
-
     <!-- ══ DELIVERY ZONE MODAL ══ -->
     <div id="deliveryModal" class="modal-backdrop">
         <div class="modal-box p-0 w-[480px]">
@@ -1512,10 +1573,12 @@
                         </select>
                     </div>
                     <div><label class="block text-xs font-extrabold text-secondary mb-1.5">Value</label><input
-                            type="number" id="dc_value" placeholder="20" min="0" class="form-input"></div>
+                            type="number" id="dc_value" placeholder="20" min="0" class="form-input">
+                    </div>
                 </div>
-                <div><label class="block text-xs font-extrabold text-secondary mb-1.5">Minimum Order (RS)</label><input
-                        type="number" id="dc_min" placeholder="0" min="0" class="form-input"></div>
+                <div><label class="block text-xs font-extrabold text-secondary mb-1.5">Minimum Order
+                        (RS)</label><input type="number" id="dc_min" placeholder="0" min="0"
+                        class="form-input"></div>
                 <div><label class="block text-xs font-extrabold text-secondary mb-1.5">Expiry Date</label><input
                         type="date" id="dc_expiry" class="form-input"></div>
             </div>
@@ -1536,34 +1599,36 @@
 
     <script>
         // ══ REAL PRODUCTS FROM LARAVEL (dynamic) ══
-       
+
         // product ajax 
         let products = @json($products->items());
-let currentPage = 1;
+        let currentPage = 1;
 
-function fetchProducts(page = 1) {
-    fetch(`/admin?page=${page}`, {
-        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-    .then(r => r.json())
-    .then(data => {
-        products = data.products;
-        renderProducts(products);
-        document.getElementById('paginationContainer').innerHTML = data.pagination;
-        bindPaginationLinks();
-    });
-}
+        function fetchProducts(page = 1) {
+            fetch(`/admin?page=${page}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    products = data.products;
+                    renderProducts(products);
+                    document.getElementById('paginationContainer').innerHTML = data.pagination;
+                    bindPaginationLinks();
+                });
+        }
 
-function bindPaginationLinks() {
-    document.querySelectorAll('#paginationContainer a').forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const url = new URL(this.href);
-            const page = url.searchParams.get('page') || 1;
-            fetchProducts(page);
-        });
-    });
-}
+        function bindPaginationLinks() {
+            document.querySelectorAll('#paginationContainer a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const url = new URL(this.href);
+                    const page = url.searchParams.get('page') || 1;
+                    fetchProducts(page);
+                });
+            });
+        }
 
 
         // ══ STATIC DATA ══
@@ -1670,48 +1735,8 @@ function bindPaginationLinks() {
             },
         ];
 
-        let categories = [{
-                id: 1,
-                emoji: '🥦',
-                name: 'Vegetables',
-                count: 0,
-                visible: true
-            },
-            {
-                id: 2,
-                emoji: '🍎',
-                name: 'Fruits',
-                count: 0,
-                visible: true
-            },
-            {
-                id: 3,
-                emoji: '🥛',
-                name: 'Dairy',
-                count: 0,
-                visible: true
-            },
-            {
-                id: 4,
-                emoji: '🍞',
-                name: 'Bakery',
-                count: 0,
-                visible: true
-            },
-            {
-                id: 5,
-                emoji: '🧃',
-                name: 'Beverages',
-                count: 0,
-                visible: true
-            },
-            {
-                id: 6,
-                emoji: '🍫',
-                name: 'Snacks',
-                count: 0,
-                visible: true
-            },
+        let categories = [{}
+
         ];
 
         // Count products per category from real data
@@ -1753,16 +1778,7 @@ function bindPaginationLinks() {
         let editingCatId = null;
         let featuredIds = new Set();
 
-        const catEmoji = {
-            Vegetables: '🥦',
-            Fruits: '🍎',
-            Dairy: '🥛',
-            Bakery: '🍞',
-            Beverages: '🧃',
-            Snacks: '🍫',
-            Meat: '🍗',
-            'Personal Care': '🧴'
-        };
+        const catEmoji = {};
         const statusColor = {
             Pending: 'background:#fff7ed;color:#ea580c;',
             Processing: 'background:#eff6ff;color:#2563eb;',
@@ -1793,7 +1809,12 @@ function bindPaginationLinks() {
             Healthy: {
                 bg: '#e0f2f1',
                 color: '#004d40'
-            }
+            },
+            PopularfromNepal: {
+                bg: '#fff3e0',
+                color: '#e65100'
+            },
+
         };
 
         // ══ NAVIGATION ══
@@ -1942,66 +1963,29 @@ function bindPaginationLinks() {
         }
 
         function openCatModal() {
-            editingCatId = null;
             document.getElementById('catName').value = '';
-            document.getElementById('catEmoji').value = '';
             document.getElementById('catDesc').value = '';
             document.getElementById('catVisible').checked = true;
             document.getElementById('catModalTitle').textContent = '➕ Add Category';
+            document.getElementById('catForm').action = '/categories';
+            document.getElementById('catMethod').value = 'POST';
             document.getElementById('catModal').classList.add('open');
         }
 
-        function editCat(id) {
-            const c = categories.find(x => x.id === id);
-            if (!c) return;
-            editingCatId = id;
-            document.getElementById('catName').value = c.name;
-            document.getElementById('catEmoji').value = c.emoji;
-            document.getElementById('catDesc').value = c.desc || '';
-            document.getElementById('catVisible').checked = c.visible;
+        function openEditCatModal(id, name, description, isActive) {
+            document.getElementById('catName').value = name;
+            document.getElementById('catDesc').value = description ?? '';
+            document.getElementById('catVisible').checked = isActive;
             document.getElementById('catModalTitle').textContent = '✏️ Edit Category';
+            document.getElementById('catForm').action = `/categories/${id}`;
+            document.getElementById('catMethod').value = 'PUT';
             document.getElementById('catModal').classList.add('open');
-        }
-
-        function deleteCat(id) {
-            if (!confirm('Delete this category?')) return;
-            categories = categories.filter(c => c.id !== id);
-            renderCategories();
-            showToast('🗑️ Category deleted');
-        }
-
-        function saveCat() {
-            const name = document.getElementById('catName').value.trim();
-            const emoji = document.getElementById('catEmoji').value.trim() || '📦';
-            if (!name) {
-                showToast('⚠️ Category name required');
-                return;
-            }
-            if (editingCatId) {
-                const c = categories.find(x => x.id === editingCatId);
-                if (c) {
-                    c.name = name;
-                    c.emoji = emoji;
-                    c.visible = document.getElementById('catVisible').checked;
-                }
-                showToast('✅ Category updated!');
-            } else {
-                categories.push({
-                    id: Date.now(),
-                    emoji,
-                    name,
-                    count: 0,
-                    visible: document.getElementById('catVisible').checked
-                });
-                showToast('✅ Category added!');
-            }
-            closeCatModal();
-            renderCategories();
         }
 
         function closeCatModal() {
             document.getElementById('catModal').classList.remove('open');
         }
+
 
         // ══ DELIVERY ══
         function renderDeliveryZones() {
@@ -2474,6 +2458,10 @@ function bindPaginationLinks() {
 
             reader.readAsDataURL(file);
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            bindPaginationLinks();
+        });
     </script>
 </body>
 

@@ -340,12 +340,30 @@
         <aside
             class="w-[220px] shrink-0 bg-white px-4 py-6 border-r border-gray-100 sticky top-16 h-[calc(100vh-64px)] overflow-y-auto">
             <div class="text-xs font-black text-gray-400 tracking-widest uppercase mb-3">Categories</div>
-            @foreach ([['All', '🏪', 'All Products'], ['Vegetables', '🥦', 'Vegetables'], ['Fruits', '🍎', 'Fruits'], ['Dairy', '🥛', 'Dairy'], ['Bakery', '🍞', 'Bakery'], ['Beverages', '🧃', 'Beverages'], ['Snacks', '🍫', 'Snacks'], ['Meat', '🍗', 'Meat & Fish'], ['Personal Care', '🧴', 'Personal Care']] as [$val, $emoji, $label])
-                <a href="{{ $val === 'All' ? route('index') : route('category', $val) }}"
-                    class="cat-btn {{ $category === $val ? 'bg-[#0c7a3e] text-white' : 'bg-transparent text-gray-600 hover:bg-[#f0faf4] hover:text-[#0c7a3e]' }} flex items-center gap-2.5 w-full rounded-xl px-3 py-2.5 text-sm font-bold font-[Nunito] transition-all mb-1">
-                    <span class="text-lg w-6 text-center">{{ $emoji }}</span> {{ $label }}
-                </a>
-            @endforeach
+          <a href="{{ route('index') }}"
+   class="cat-btn {{ $category === 'All' ? 'bg-[#0c7a3e] text-white' : 'bg-transparent text-gray-600 hover:bg-[#f0faf4] hover:text-[#0c7a3e]' }} flex items-center gap-2.5 w-full rounded-xl px-3 py-2.5 text-sm font-bold mb-1">
+    <span class="text-lg w-6 text-center">🏪</span> All Products
+</a>
+
+@foreach ($categories as $cat)
+    <a href="{{ route('category', $cat->name) }}"
+       class="cat-btn {{ $category === $cat->name ? 'bg-[#0c7a3e] text-white' : 'bg-transparent text-gray-600 hover:bg-[#f0faf4] hover:text-[#0c7a3e]' }} 
+       flex items-center gap-3 w-full rounded-xl px-3 py-2.5 text-sm font-semibold mb-1 transition">
+
+        {{-- Category Image --}}
+        <div class="w-9 h-9 flex-shrink-0">
+            <img src="{{ asset('storage/' . $cat->image) }}" 
+                 alt="{{ $cat->name }}" 
+                 class="w-full h-full object-cover rounded-md border border-gray-200">
+        </div>
+
+        {{-- Category Name --}}
+        <span class="flex-1 truncate">
+            {{ $cat->name }}
+        </span>
+
+    </a>
+@endforeach
         </aside>
 
         <!-- Main Content -->
@@ -541,18 +559,10 @@
                 bg: '#e0f2f1',
                 color: '#004d40'
             },
+          
         };
 
-        const catEmoji = {
-            Vegetables: '🥦',
-            Fruits: '🍎',
-            Dairy: '🥛',
-            Bakery: '🍞',
-            Beverages: '🧃',
-            Snacks: '🍫',
-            Meat: '🍗',
-            'Personal Care': '🧴'
-        };
+        
 
         const products = @json($products->items());
 
@@ -928,6 +938,84 @@
         });
 
         renderProducts(products);
+
+
+        const isAuth = {{ auth()->check() ? 'true' : 'false' }};
+
+// ── Add to cart ──
+async function addToCart(productId, quantity = 1) {
+    if (!isAuth) {
+        // Guest → localStorage
+        let cart = getLocalCart();
+        cart[productId] = (cart[productId] || 0) + quantity;
+        saveLocalCart(cart);
+        updateCartUI();
+        return;
+    }
+
+    // Auth → DB via AJAX
+    await fetch('/cart/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ product_id: productId, quantity })
+    });
+    updateCartUI();
+}
+
+// ── localStorage helpers ──
+function getLocalCart() {
+    return JSON.parse(localStorage.getItem('cart') || '{}');
+}
+
+function saveLocalCart(cart) {
+    localStorage.setItem('cart', JSON.stringify(cart));
+}
+
+// ── Load cart on page load ──
+async function loadCart() {
+    if (!isAuth) {
+        cart = getLocalCart(); // your existing cart object
+        updateCartUI();
+        return;
+    }
+
+    // Auth → fetch from DB
+    const res  = await fetch('/cart');
+    const data = await res.json();
+
+    // Convert DB format to your cart object {id: qty}
+    cart = {};
+    data.forEach(item => {
+        cart[item.product_id] = item.quantity;
+    });
+    updateCartUI();
+}
+
+loadCart(); // call on page load
+
+
+// Run this right after login succeeds
+async function mergeCartAfterLogin() {
+    const localCart = getLocalCart();
+    if (Object.keys(localCart).length === 0) return;
+
+    const items = Object.entries(localCart).map(([product_id, quantity]) => ({
+        product_id, quantity
+    }));
+
+    await fetch('/cart/merge', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ cart: items })
+    });
+
+    localStorage.removeItem('cart');}// clear local after merge
     </script>
 </body>
 

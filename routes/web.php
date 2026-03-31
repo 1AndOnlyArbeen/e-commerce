@@ -5,26 +5,18 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HomeController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
-
-
-
-
-
-
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CartController;
 
 Route::get('/', [HomeController::class, 'index'])
-->name('index');
+    ->name('index');
 
-
-// catageory of welcome home 
+// catageory of welcome home
 Route::get('/category/{category}', [HomeController::class, 'index'])
     ->name('category');
 
 //
-
-
 
 // register router;
 
@@ -36,8 +28,8 @@ Route::post('/register', [UserController::class, 'registerUser'])->name('registe
 // login
 
 Route::get('/login', [UserController::class, 'login'])
-->name('login')
-->middleware('guest');
+    ->name('login')
+    ->middleware('guest');
 Route::post('/login', [UserController::class, 'loginUser'])->name('loginUser');
 
 Route::post('/logout', [UserController::class, 'logout'])->name('logout');
@@ -46,14 +38,17 @@ Route::post('/logout', [UserController::class, 'logout'])->name('logout');
 
 Route::resource('/admin', AdminController::class);
 
+Route::resource('/categories', CategoryController::class);
 
-Route::post('/category',[CategoryController::class, 'category']);
-
-
-
-
-
-// for the product edit and update 
+// for the product edit and update
 
 Route::put('/admin/products/{id}', [AdminController::class, 'update']);
 Route::delete('/admin/products/{id}', [AdminController::class, 'destroy']);
+
+
+
+//for cartitem route 
+Route::post('/cart/add',    [CartController::class, 'add']);
+Route::get('/cart',         [CartController::class, 'get']);
+Route::post('/cart/remove', [CartController::class, 'remove']);
+Route::post('/cart/merge',  [CartController::class, 'merge'])->middleware('auth');
