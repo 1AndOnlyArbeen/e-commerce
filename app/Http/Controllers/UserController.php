@@ -64,6 +64,8 @@ class UserController extends Controller
 
         Auth::login($user);
         $req->session()->regenerate();
+        //for flash 
+        session()->flash('just_logged_in', true); 
 
         return redirect('/')->with('success', 'login successfully welcome');
     }

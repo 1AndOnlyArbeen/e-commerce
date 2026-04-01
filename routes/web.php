@@ -3,11 +3,11 @@
 // importing the controller
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\CartController;
 
 Route::get('/', [HomeController::class, 'index'])
     ->name('index');
@@ -45,10 +45,9 @@ Route::resource('/categories', CategoryController::class);
 Route::put('/admin/products/{id}', [AdminController::class, 'update']);
 Route::delete('/admin/products/{id}', [AdminController::class, 'destroy']);
 
-
-
-//for cartitem route 
-Route::post('/cart/add',    [CartController::class, 'add']);
-Route::get('/cart',         [CartController::class, 'get']);
+// for cartitem route
+Route::post('/cart/add', [CartController::class, 'add']);
+Route::get('/cart', [CartController::class, 'get']);
 Route::post('/cart/remove', [CartController::class, 'remove']);
-Route::post('/cart/merge',  [CartController::class, 'merge'])->middleware('auth');
+Route::post('/cart/delete', [CartController::class, 'delete']);
+Route::post('/cart/merge', [CartController::class, 'merge'])->middleware('auth');
