@@ -18,7 +18,7 @@ class Order extends Model
 
     ];
 
-    public function users()
+    public function user()
     {
         return $this->belongsTo(User::class);
     }
@@ -32,4 +32,11 @@ class Order extends Model
     {
         return $this->hasOne(Address::class);
     }
+    public function getTotalAmountAttribute()
+{
+    return $this->orderItems->sum('total_amount');
+}
+
+
+protected $appends = ['total_amount'];
 }

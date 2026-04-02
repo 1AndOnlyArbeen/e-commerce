@@ -8,6 +8,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\OrderController;
 
 Route::get('/', [HomeController::class, 'index'])
     ->name('index');
@@ -50,3 +51,15 @@ Route::post('/cart/add', [CartController::class, 'add']);
 Route::get('/cart', [CartController::class, 'get']);
 Route::post('/cart/remove', [CartController::class, 'remove']);
 Route::post('/cart/merge', [CartController::class, 'merge']);
+
+//for address and order route
+Route::post('/checkout/address', [OrderController::class, 'saveAddress'])->name('checkout.address')->middleware('auth');
+
+
+// Checkout routes — auth required
+Route::middleware('auth')->group(function () {
+    Route::post('/checkout/address', [OrderController::class, 'saveAddress'])->name('checkout.address');
+    Route::post('/checkout/payment', [OrderController::class, 'savePayment'])->name('checkout.payment');
+    Route::post('/checkout/place',   [OrderController::class, 'placeOrder'])->name('checkout.place');
+    Route::get('/checkout/last-address', [OrderController::class, 'getLastAddress'])->name('checkout.lastAddress');
+});

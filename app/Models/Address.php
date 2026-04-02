@@ -15,6 +15,7 @@ class Address extends Model
         'city',
         'state',
         'zip_code',
+        'description',
     ];
 
     // Define the relationship with the Order model

@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use App\Models\Order;
+use App\Models\User;
 
 class AdminController extends Controller
 {
@@ -16,6 +18,18 @@ class AdminController extends Controller
 
         // adding the pagination
         $user = Auth::user();
+
+
+        // for the order and customer data we can fetch it from the database and pass it to the view :
+        $orders =Order::with(['address', 'Orderitems.product', 'user'])
+    ->latest()
+    ->paginate(20);
+
+        // for the customer data we can fetch it from the database and pass it to the view :
+        $customers = User::where('role', '!=', 'admin')
+            ->withCount('orders')
+            ->latest()
+            ->get();
 
         // if not logged in OR not admin → redirect to store
         if (! $user || $user->role !== 'admin') {
@@ -40,7 +54,7 @@ class AdminController extends Controller
         $byCategory = Product::all()->groupBy('category');
         $categories = Category::withCount('products')->get();
 
-        return view('admin', compact('allProduct', 'byCategory', 'products', 'categories'));
+        return view('admin', compact('allProduct', 'byCategory', 'products', 'categories', 'orders', 'customers'));
     }
 
     public function create(Request $request) {}
@@ -60,12 +74,12 @@ class AdminController extends Controller
         $slug = Str::slug($request->name);
         $count = Product::where('slug', $slug)->count();
         if ($count > 0) {
-            $slug = $slug.'-'.($count + 1);
+            $slug = $slug . '-' . ($count + 1);
         }
 
         $imagePath = null;
         if ($request->hasFile('image')) {
-            $fileName = time().'_'.$request->file('image')->getClientOriginalName();
+            $fileName = time() . '_' . $request->file('image')->getClientOriginalName();
             $imagePath = $request->file('image')->storeAs('images', $fileName, 'public');
         }
 
@@ -109,12 +123,12 @@ class AdminController extends Controller
         if ($request->hasFile('image')) {
 
             // delete old image
-            if ($Products->image && file_exists(storage_path('app/public/'.$Products->image))) {
-                unlink(storage_path('app/public/'.$Products->image));
+            if ($Products->image && file_exists(storage_path('app/public/' . $Products->image))) {
+                unlink(storage_path('app/public/' . $Products->image));
             }
 
             // upload new image
-            $fileName = time().'_'.$request->file('image')->getClientOriginalName();
+            $fileName = time() . '_' . $request->file('image')->getClientOriginalName();
 
             $imagePath = $request->file('image')->storeAs(
                 'images',
@@ -144,8 +158,8 @@ class AdminController extends Controller
 
         // delete the image and data of that id
 
-        if ($products->image && file_exists(storage_path('app/public/'.$products->image))) {
-            unlink(storage_path('app/public/'.$products->image));
+        if ($products->image && file_exists(storage_path('app/public/' . $products->image))) {
+            unlink(storage_path('app/public/' . $products->image));
         }
 
         // deleting from database

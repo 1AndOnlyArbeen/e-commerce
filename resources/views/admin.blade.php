@@ -1,3 +1,45 @@
+{{--
+
+  admin.blade.php — ArbeenStore Admin Panel
+
+
+  HOW THIS FILE CONNECTS TO THE BACKEND (READ THIS FIRST):
+
+  1. When you visit /admin in your browser, Laravel calls AdminController@index()
+  2. That controller fetches products + categories from the DATABASE
+  3. It passes them to this blade view: compact('products', 'allProduct', 'categories')
+  4. Blade then INJECTS those PHP variables into the HTML using {{ }} syntax
+     BEFORE sending the page to your browser.
+  5. So when the browser receives the page, it already has real data inside it.
+
+  HOW ACTIONS (ADD / EDIT / DELETE) WORK:
+
+  Every action is just an HTML <form> pointing to a Laravel route:
+
+  ADD PRODUCT:
+    <form action="{{ route('admin.store') }}" method="POST">
+    → Browser sends POST /admin/store → AdminController@store() runs → saves to DB
+
+  EDIT PRODUCT:
+    <form action="/admin/products/{id}" method="POST"> + @method('PUT')
+    → Browser sends POST with hidden _method=PUT → AdminController@update() runs
+
+  DELETE PRODUCT:
+    <form action="/admin/products/{id}" method="POST"> + @method('DELETE')
+    → Browser sends POST with hidden _method=DELETE → AdminController@destroy() runs
+
+  JavaScript's ONLY job here is:
+    - Show/hide modals (popups)
+    - Set the form's action URL to the correct product ID before submitting
+    - Validate fields before submit
+    - Render the product table rows from the JS products array
+    - Live preview while typing
+    - Dark mode, toasts, pagination via AJAX
+
+  The ACTUAL saving/deleting is always done by Laravel, not JS.
+
+--}}
+
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 
@@ -31,7 +73,7 @@
             font-family: 'Nunito', sans-serif;
         }
 
-        /* ── THEME VARIABLES ── */
+        /* CSS variables so switching dark/light mode just changes one attribute */
         [data-theme="light"] {
             --bg: #f3f4f6;
             --sidebar: #ffffff;
@@ -90,6 +132,7 @@
             border-radius: 16px;
         }
 
+        /* Form inputs */
         .form-input {
             background: var(--input-bg);
             border: 1px solid var(--border);
@@ -118,6 +161,7 @@
             background: #2d1515 !important;
         }
 
+        /* Hide browser default dropdown arrow, replace with custom SVG */
         select.form-input {
             appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
@@ -137,6 +181,7 @@
             border-bottom: 1px solid var(--border);
         }
 
+        /* Nav items — active = green bg, inactive = grey text */
         .nav-item {
             display: flex;
             align-items: center;
@@ -162,6 +207,7 @@
             color: #0c7a3e;
         }
 
+        /* All page sections are hidden by default. JS adds .active to show one at a time */
         .page-section {
             display: none;
         }
@@ -170,6 +216,7 @@
             display: block;
         }
 
+        /* Toggle switch (used for is_active, notifications etc.) */
         .switch {
             position: relative;
             width: 44px;
@@ -214,6 +261,7 @@
             transform: translateX(20px);
         }
 
+        /* Tag radio buttons — hidden input, styled label */
         .tag-option {
             display: none;
         }
@@ -235,6 +283,7 @@
             transition: all .15s;
         }
 
+        /* Image upload zone */
         .upload-zone {
             cursor: pointer;
             transition: all .2s;
@@ -252,6 +301,7 @@
             display: flex;
         }
 
+        /* Modals — hidden by default. JS adds .open class to show them */
         .modal-backdrop {
             display: none;
             position: fixed;
@@ -288,6 +338,7 @@
             }
         }
 
+        /* Toast notification */
         .toast {
             transform: translateY(80px);
             opacity: 0;
@@ -315,6 +366,7 @@
             background: #e8f5ee22;
         }
 
+        /* Category card — show action buttons only on hover */
         .cat-actions {
             opacity: 0;
             transition: opacity .15s;
@@ -337,6 +389,7 @@
             border-radius: 99px;
         }
 
+        /* Profile dropdown in sidebar */
         .profile-dropdown {
             display: none;
             position: absolute;
@@ -362,6 +415,7 @@
             margin: 0;
         }
 
+        /* Reusable card header */
         .card-header {
             padding: 16px 24px;
             border-bottom: 1px solid var(--border);
@@ -382,6 +436,7 @@
             flex-shrink: 0;
         }
 
+        /* Button styles */
         .btn-primary {
             background: #0c7a3e;
             color: #fff;
@@ -450,6 +505,7 @@
             background: #d0ead8;
         }
 
+        /* "RS" prefix inside price inputs */
         .input-prefix {
             position: absolute;
             left: 0;
@@ -472,7 +528,10 @@
 
 <body class="min-h-screen flex">
 
-    <!-- ══ SIDEBAR ══ -->
+    {{-- ══ SIDEBAR ══
+         All nav links use onclick="navigate('page-name')" which is a JS function.
+         navigate() just shows/hides page sections — it does NOT go to the server.
+         The only exception is the Logout form which IS a real POST to /logout. --}}
     <aside class="w-[240px] min-w-[240px] h-screen fixed top-0 left-0 flex flex-col z-50">
         <a href="#" onclick="navigate('dashboard'); return false;"
             class="px-5 h-16 flex items-center gap-2.5 no-underline" style="border-bottom:1px solid var(--border);">
@@ -487,38 +546,52 @@
 
         <div class="flex-1 overflow-y-auto py-2">
             <div class="px-4 pt-4 pb-1.5 text-[10px] font-black text-secondary tracking-widest uppercase">Main</div>
-            <a href="#" onclick="navigate('dashboard'); return false;" class="nav-item" id="nav-dashboard"><span
-                    class="text-[17px] w-5 text-center">📊</span> Dashboard</a>
+
+            <a href="#" onclick="navigate('dashboard'); return false;" class="nav-item" id="nav-dashboard">
+                <span class="text-[17px] w-5 text-center">📊</span> Dashboard
+            </a>
+
             <a href="#" onclick="navigate('products'); return false;" class="nav-item" id="nav-products">
                 <span class="text-[17px] w-5 text-center">📦</span> Products
+                {{-- $allProduct->count() is injected by Laravel from the controller --}}
                 <span class="ml-auto bg-red-500 text-white text-[10px] font-black rounded-lg px-1.5 py-0.5"
                     id="nav-product-count">{{ $allProduct->count() }}</span>
             </a>
 
-            <a href="#" onclick="navigate('orders'); return false;" class="nav-item" id="nav-orders"><span
-                    class="text-[17px] w-5 text-center">🛒</span> Orders <span
-                    class="ml-auto bg-red-500 text-white text-[10px] font-black rounded-lg px-1.5 py-0.5">5</span></a>
-            <a href="#" onclick="navigate('customers'); return false;" class="nav-item" id="nav-customers"><span
-                    class="text-[17px] w-5 text-center">👥</span> Customers</a>
+            <a href="#" onclick="navigate('orders'); return false;" class="nav-item" id="nav-orders">
+                <span class="text-[17px] w-5 text-center">🛒</span> Orders
+                <span class="ml-auto bg-red-500 text-white text-[10px] font-black rounded-lg px-1.5 py-0.5">5</span>
+            </a>
+
+            <a href="#" onclick="navigate('customers'); return false;" class="nav-item" id="nav-customers">
+                <span class="text-[17px] w-5 text-center">👥</span> Customers
+            </a>
 
             <div class="px-4 pt-4 pb-1.5 text-[10px] font-black text-secondary tracking-widest uppercase">Catalog</div>
-            <a href="#" onclick="navigate('add-product'); return false;" class="nav-item"
-                id="nav-add-product"><span class="text-[17px] w-5 text-center">➕</span> Add Product</a>
-            <a href="#" onclick="navigate('categories'); return false;" class="nav-item" id="nav-categories"><span
-                    class="text-[17px] w-5 text-center">🏷️</span> Categories</a>
-            <a href="#" onclick="navigate('banner'); return false;" class="nav-item" id="nav-banner"><span
-                    class="text-[17px] w-5 text-center">🖼️</span> Banner & Featured</a>
-            <a href="#" onclick="navigate('discounts'); return false;" class="nav-item" id="nav-discounts"><span
-                    class="text-[17px] w-5 text-center">🎟️</span> Discounts</a>
+
+            <a href="#" onclick="navigate('add-product'); return false;" class="nav-item" id="nav-add-product">
+                <span class="text-[17px] w-5 text-center">➕</span> Add Product
+            </a>
+            <a href="#" onclick="navigate('categories'); return false;" class="nav-item" id="nav-categories">
+                <span class="text-[17px] w-5 text-center">🏷️</span> Categories
+            </a>
+            <a href="#" onclick="navigate('banner'); return false;" class="nav-item" id="nav-banner">
+                <span class="text-[17px] w-5 text-center">🖼️</span> Banner & Featured
+            </a>
+            <a href="#" onclick="navigate('discounts'); return false;" class="nav-item" id="nav-discounts">
+                <span class="text-[17px] w-5 text-center">🎟️</span> Discounts
+            </a>
 
             <div class="px-4 pt-4 pb-1.5 text-[10px] font-black text-secondary tracking-widest uppercase">Settings</div>
-            <a href="#" onclick="navigate('settings'); return false;" class="nav-item" id="nav-settings"><span
-                    class="text-[17px] w-5 text-center">⚙️</span> Store Settings</a>
-            <a href="#" onclick="navigate('delivery'); return false;" class="nav-item" id="nav-delivery"><span
-                    class="text-[17px] w-5 text-center">🚚</span> Delivery Zones</a>
+
+            <a href="#" onclick="navigate('settings'); return false;" class="nav-item" id="nav-settings">
+                <span class="text-[17px] w-5 text-center">⚙️</span> Store Settings
+            </a>
+            <a href="#" onclick="navigate('delivery'); return false;" class="nav-item" id="nav-delivery">
+                <span class="text-[17px] w-5 text-center">🚚</span> Delivery Zones
+            </a>
         </div>
 
-        <!-- Admin Profile -->
         <div style="border-top:1px solid var(--border);padding:14px;position:relative;">
             <div class="profile-dropdown" id="profileDropdown">
                 <div class="px-3 py-2 mb-1">
@@ -527,14 +600,17 @@
                 </div>
                 <hr class="divider mb-1">
                 <button onclick="navigate('settings'); closeProfileDropdown();"
-                    class="w-full text-left px-3 py-2 rounded-lg text-sm font-bold text-primary hover-row transition-colors flex items-center gap-2">⚙️
-                    Settings</button>
+                    class="w-full text-left px-3 py-2 rounded-lg text-sm font-bold text-primary hover-row transition-colors flex items-center gap-2">
+                    ⚙️ Settings
+                </button>
                 <hr class="divider my-1">
+                {{-- This is a REAL form — clicking Logout sends POST /logout to Laravel --}}
                 <form action="/logout" method="POST" class="m-0">
                     @csrf
                     <button type="submit"
-                        class="w-full text-left px-3 py-2 rounded-lg text-sm font-bold text-red-500 hover:bg-red-50 transition-colors flex items-center gap-2">↩
-                        Logout</button>
+                        class="w-full text-left px-3 py-2 rounded-lg text-sm font-bold text-red-500 hover:bg-red-50 transition-colors flex items-center gap-2">
+                        ↩ Logout
+                    </button>
                 </form>
             </div>
             <button onclick="toggleProfileDropdown()"
@@ -551,10 +627,9 @@
         </div>
     </aside>
 
-    <!-- ══ MAIN ══ -->
+    {{-- ══ MAIN CONTENT AREA ══ --}}
     <div class="ml-[240px] flex-1 flex flex-col min-h-screen">
 
-        <!-- Topbar -->
         <div class="topbar h-16 px-8 flex items-center justify-between sticky top-0 z-40">
             <div id="breadcrumbText" class="text-[13px] text-secondary font-bold">Dashboard</div>
             <div class="flex items-center gap-3">
@@ -570,7 +645,9 @@
             </div>
         </div>
 
-        <!-- ══════════ DASHBOARD ══════════ -->
+        {{-- ══ DASHBOARD ══
+             Stats shown here use {{ $allProduct->count() }} — real data from Laravel.
+             The other numbers (5 orders, 142 customers) are currently hardcoded. --}}
         <div id="page-dashboard" class="page-section p-8">
             <div class="mb-7">
                 <div class="text-2xl font-black text-primary">Dashboard</div>
@@ -580,6 +657,7 @@
             <div class="grid grid-cols-4 gap-5 mb-8">
                 <div class="card p-5">
                     <div class="text-2xl mb-1">📦</div>
+                    {{-- Real count from DB via AdminController@index() --}}
                     <div class="text-3xl font-black text-primary">{{ $allProduct->count() }}</div>
                     <div class="text-sm font-bold text-secondary mt-1">Total Products</div>
                     <div class="text-xs text-green-600 font-bold mt-2">+2 this week</div>
@@ -615,7 +693,11 @@
             </div>
         </div>
 
-        <!-- ══════════ PRODUCTS ══════════ -->
+        {{-- ══ PRODUCTS PAGE ══
+             The table rows are NOT rendered by Blade here.
+             Instead, JS renderProducts() builds the rows from the `products` JS array.
+             That JS array is populated at the bottom: let products = @json($products->items())
+             So flow is: Laravel → $products → @json() → JS array → renderProducts() → HTML rows --}}
         <div id="page-products" class="page-section p-8">
             <div class="flex items-center justify-between mb-7">
                 <div>
@@ -629,25 +711,26 @@
             <div class="card overflow-hidden">
                 <div class="px-6 py-4 flex items-center justify-between"
                     style="border-bottom:1px solid var(--border);">
-                    <div class="font-black text-sm text-primary">All Products <span
-                            class="text-secondary font-semibold"
-                            id="productCountLabel">{{ $allProduct->count() }}</span></div>
+                    <div class="font-black text-sm text-primary">
+                        All Products
+                        <span class="text-secondary font-semibold"
+                            id="productCountLabel">{{ $allProduct->count() }}</span>
+                    </div>
+                    {{-- oninput="filterTable()" calls JS to filter rows without server request --}}
                     <input type="text" id="productSearch" placeholder="Search products…" oninput="filterTable()"
                         class="form-input w-56" style="padding:8px 14px;">
                 </div>
+                {{-- This div is empty on load. JS renderProducts() fills it with rows --}}
                 <div id="productsTableBody"></div>
-                {{-- pagination  --}}
+                {{-- Pagination links from Laravel's paginator --}}
                 <div id="paginationContainer" class="flex justify-center mt-4 py-4"
                     style="border-top:1px solid var(--border);">
                     {{ $products->links() }}
                 </div>
-
             </div>
-
-
         </div>
 
-        <!-- ══════════ ORDERS ══════════ -->
+        {{-- ══ ORDERS PAGE ══ (data is currently dummy JS data, not from DB) --}}
         <div id="page-orders" class="page-section p-8">
             <div class="mb-7">
                 <div class="text-2xl font-black text-primary">Orders</div>
@@ -655,12 +738,13 @@
             </div>
             <div class="card overflow-hidden">
                 <div class="px-6 py-4 font-black text-sm text-primary" style="border-bottom:1px solid var(--border);">
-                    Recent Orders <span class="text-secondary font-semibold">(5 pending)</span></div>
+                    Recent Orders <span class="text-secondary font-semibold">(5 pending)</span>
+                </div>
                 <div id="ordersBody"></div>
             </div>
         </div>
 
-        <!-- ══════════ CUSTOMERS ══════════ -->
+        {{-- ══ CUSTOMERS PAGE ══ (data is currently dummy JS data, not from DB) --}}
         <div id="page-customers" class="page-section p-8">
             <div class="mb-7">
                 <div class="text-2xl font-black text-primary">Customers</div>
@@ -668,12 +752,16 @@
             </div>
             <div class="card overflow-hidden">
                 <div class="px-6 py-4 font-black text-sm text-primary" style="border-bottom:1px solid var(--border);">
-                    All Customers <span class="text-secondary font-semibold">(3)</span></div>
+                    All Customers <span class="text-secondary font-semibold">(3)</span>
+                </div>
                 <div id="customersBody"></div>
             </div>
         </div>
 
-        <!-- ══════════ CATEGORIES ══════════ -->
+        {{-- ══ CATEGORIES PAGE ══
+             Unlike products, categories ARE rendered by Blade @foreach — server-side.
+             The delete button here is a real <form> with method DELETE, no JS needed.
+             The edit button calls openEditCatModal() which sets the modal form's action URL. --}}
         <div id="page-categories" class="page-section p-8">
             <div class="flex items-center justify-between mb-7">
                 <div>
@@ -683,8 +771,8 @@
                 <button onclick="openCatModal()" class="btn-primary flex items-center gap-2">➕ Add Category</button>
             </div>
             <div class="grid grid-cols-3 gap-4">
-
                 @foreach ($categories as $cat)
+                    {{-- Each category card is rendered by Blade with real DB data --}}
                     <div class="card p-5 cat-card flex items-center gap-3 relative group">
                         <div class="w-12 h-12">
                             <img src="{{ asset('storage/' . $cat->image) }}" alt="{{ $cat->name }}"
@@ -698,9 +786,11 @@
                             @endif
                         </div>
                         <div class="cat-actions flex gap-1.5 absolute right-4 top-4">
+                            {{-- Edit: JS fills the modal form and sets action to /categories/{id} --}}
                             <button
                                 onclick="openEditCatModal({{ $cat->id }}, '{{ $cat->name }}', '{{ $cat->description }}', {{ $cat->is_active ? 'true' : 'false' }})"
                                 class="btn-edit text-[11px] px-2 py-1">✏️</button>
+                            {{-- Delete: real form, no JS needed. Submits DELETE to /categories/{id} --}}
                             <form action="{{ route('categories.destroy', $cat->id) }}" method="POST"
                                 class="m-0">
                                 @csrf
@@ -718,10 +808,9 @@
                     <div class="text-sm font-bold">Add Category</div>
                 </button>
             </div>
-
         </div>
 
-        <!-- ══════════ BANNER & FEATURED ══════════ -->
+        {{-- ══ BANNER & FEATURED ══ --}}
         <div id="page-banner" class="page-section p-8">
             <div class="mb-7">
                 <div class="text-2xl font-black text-primary">Banner & Featured Products</div>
@@ -733,8 +822,7 @@
                     <div class="card-header-icon">🖼️</div>
                     <div>
                         <div class="font-black text-[15px] text-primary">Homepage Banners</div>
-                        <div class="text-xs text-secondary font-semibold mt-0.5">Upload up to 5 rotating banners for
-                            the homepage slider</div>
+                        <div class="text-xs text-secondary font-semibold mt-0.5">Upload up to 5 rotating banners</div>
                     </div>
                     <button onclick="document.getElementById('bannerFileInput').click()"
                         class="btn-primary ml-auto text-sm">+ Upload Banner</button>
@@ -821,14 +909,13 @@
                     <div class="grid grid-cols-4 gap-3" id="featuredGrid"></div>
                     <div class="mt-4 p-3 rounded-xl text-xs font-bold text-secondary flex items-center gap-2"
                         style="background:var(--input-bg);border:1px solid var(--border);">
-                        💡 Tip: Featured products appear highlighted on the homepage. Choose your best-sellers and new
-                        arrivals.
+                        💡 Tip: Featured products appear highlighted on the homepage.
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- ══════════ DISCOUNTS ══════════ -->
+        {{-- ══ DISCOUNTS ══ --}}
         <div id="page-discounts" class="page-section p-8">
             <div class="flex items-center justify-between mb-7">
                 <div>
@@ -842,14 +929,13 @@
             </div>
         </div>
 
-        <!-- ══════════ SETTINGS ══════════ -->
+        {{-- ══ SETTINGS ══ --}}
         <div id="page-settings" class="page-section p-8">
             <div class="mb-7">
                 <div class="text-2xl font-black text-primary">Store Settings</div>
                 <div class="text-[13px] text-secondary font-semibold mt-1">Configure your store preferences</div>
             </div>
             <div class="grid gap-6" style="grid-template-columns:1fr 1fr;align-items:start;">
-                <!-- General -->
                 <div class="card overflow-hidden">
                     <div class="card-header">
                         <div class="card-header-icon">🏪</div>
@@ -874,7 +960,6 @@
                         <button class="btn-primary" onclick="showToast('✅ General info saved!')">Save Changes</button>
                     </div>
                 </div>
-                <!-- Appearance -->
                 <div class="card overflow-hidden">
                     <div class="card-header">
                         <div class="card-header-icon">🎨</div>
@@ -883,21 +968,27 @@
                         </div>
                     </div>
                     <div class="p-6 flex flex-col gap-4">
-                        <div><label class="block text-xs font-extrabold text-secondary mb-1.5">Brand Color</label>
-                            <div class="flex items-center gap-3"><input type="color" value="#0c7a3e"
+                        <div>
+                            <label class="block text-xs font-extrabold text-secondary mb-1.5">Brand Color</label>
+                            <div class="flex items-center gap-3">
+                                <input type="color" value="#0c7a3e"
                                     class="w-10 h-10 rounded-xl border-theme border cursor-pointer"
-                                    style="padding:2px;"><input type="text" value="#0c7a3e"
-                                    class="form-input flex-1"></div>
+                                    style="padding:2px;">
+                                <input type="text" value="#0c7a3e" class="form-input flex-1">
+                            </div>
                         </div>
-                        <div><label class="block text-xs font-extrabold text-secondary mb-1.5">Store Logo</label>
+                        <div>
+                            <label class="block text-xs font-extrabold text-secondary mb-1.5">Store Logo</label>
                             <div class="flex items-center gap-3">
                                 <div
                                     class="w-12 h-12 rounded-xl bg-[#0c7a3e] flex items-center justify-center text-2xl shrink-0">
-                                    🌿</div><button onclick="showToast('📸 Logo upload coming soon')"
+                                    🌿</div>
+                                <button onclick="showToast('📸 Logo upload coming soon')"
                                     class="btn-ghost text-sm">Upload Logo</button>
                             </div>
                         </div>
-                        <div><label class="block text-xs font-extrabold text-secondary mb-2">Default Theme</label>
+                        <div>
+                            <label class="block text-xs font-extrabold text-secondary mb-2">Default Theme</label>
                             <div class="flex gap-3">
                                 <label class="flex items-center gap-2 cursor-pointer"><input type="radio"
                                         name="theme_pref" value="light" checked class="accent-[#0c7a3e]"><span
@@ -910,7 +1001,6 @@
                         <button class="btn-primary" onclick="showToast('✅ Appearance saved!')">Save Changes</button>
                     </div>
                 </div>
-                <!-- Payment -->
                 <div class="card overflow-hidden">
                     <div class="card-header">
                         <div class="card-header-icon">💳</div>
@@ -919,7 +1009,8 @@
                         </div>
                     </div>
                     <div class="p-6 flex flex-col gap-4">
-                        <div><label class="block text-xs font-extrabold text-secondary mb-1.5">Currency</label>
+                        <div>
+                            <label class="block text-xs font-extrabold text-secondary mb-1.5">Currency</label>
                             <select class="form-input">
                                 <option selected>NPR — Nepalese Rupee (RS)</option>
                                 <option>USD — US Dollar ($)</option>
@@ -948,7 +1039,6 @@
                             Changes</button>
                     </div>
                 </div>
-                <!-- Notifications -->
                 <div class="card overflow-hidden">
                     <div class="card-header">
                         <div class="card-header-icon">🔔</div>
@@ -979,7 +1069,7 @@
             </div>
         </div>
 
-        <!-- ══════════ DELIVERY ══════════ -->
+        {{-- ══ DELIVERY ZONES ══ --}}
         <div id="page-delivery" class="page-section p-8">
             <div class="flex items-center justify-between mb-7">
                 <div>
@@ -1029,13 +1119,11 @@
                         </div>
                     </div>
                     <div><label class="block text-xs font-extrabold text-secondary mb-1.5">Estimated Delivery
-                            Time</label>
-                        <select class="form-input">
+                            Time</label><select class="form-input">
                             <option>30–45 minutes</option>
                             <option selected>45–60 minutes</option>
                             <option>1–2 hours</option>
-                        </select>
-                    </div>
+                        </select></div>
                     <div><label class="block text-xs font-extrabold text-secondary mb-1.5">Max Orders Per
                             Slot</label><input type="number" value="20" class="form-input"></div>
                     <div class="col-span-2"><button class="btn-primary"
@@ -1044,7 +1132,15 @@
             </div>
         </div>
 
-        <!-- ══════════ ADD PRODUCT ══════════ -->
+        {{-- ══ ADD PRODUCT ══
+             HOW THIS CONNECTS TO THE BACKEND:
+             1. This <form> has action="{{ route('admin.store') }}" → resolves to POST /admin/store
+             2. When submitted, Laravel routes it to AdminController@store()
+             3. store() validates, saves image, inserts DB row, then redirects to /admin
+             4. The "Publish Product" button does NOT submit directly — it calls submitForm() JS first
+             5. submitForm() runs validate() to check required fields, THEN calls form.submit()
+             6. @csrf adds a hidden security token Laravel requires for all POST requests
+             7. enctype="multipart/form-data" is required when the form includes file uploads --}}
         <form id="productForm" action="{{ route('admin.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div id="page-add-product" class="page-section flex-1 p-8 pb-12">
@@ -1056,13 +1152,14 @@
                     </div>
                     <div class="flex gap-2.5">
                         <button type="button" onclick="resetForm()" class="btn-ghost">✕ Discard</button>
+                        {{-- type="button" prevents accidental direct submit, JS validate() runs first --}}
                         <button type="button" onclick="submitForm()" class="btn-primary flex items-center gap-2">✓
                             Publish Product</button>
                     </div>
                 </div>
                 <div class="grid gap-6" style="grid-template-columns:1fr 360px;align-items:start;">
                     <div class="flex flex-col gap-5">
-                        <!-- Basic Info -->
+                        {{-- Basic Info card --}}
                         <div class="card overflow-hidden">
                             <div class="card-header">
                                 <div class="card-header-icon">📝</div>
@@ -1074,8 +1171,10 @@
                             </div>
                             <div class="p-6">
                                 <div class="mb-5">
-                                    <label class="block text-[13px] font-extrabold text-primary mb-1.5">Product Name
-                                        <span class="text-red-500">*</span></label>
+                                    <label class="block text-[13px] font-extrabold text-primary mb-1.5">
+                                        Product Name <span class="text-red-500">*</span>
+                                    </label>
+                                    {{-- name="name" → this value becomes $request->name in store() --}}
                                     <input name="name" type="text" id="productName"
                                         placeholder="e.g. Fresh Organic Tomatoes" oninput="updatePreview()"
                                         maxlength="60" class="form-input">
@@ -1085,48 +1184,53 @@
                                         name is required</div>
                                 </div>
                                 <div class="mb-5">
-                                    <label class="block text-[13px] font-extrabold text-primary mb-1.5">Description
-                                        <span
-                                            class="text-[11px] font-semibold text-secondary ml-1.5">Optional</span></label>
+                                    <label class="block text-[13px] font-extrabold text-primary mb-1.5">
+                                        Description <span
+                                            class="text-[11px] font-semibold text-secondary ml-1.5">Optional</span>
+                                    </label>
+                                    {{-- name="description" → $request->description in store() --}}
                                     <textarea name="description" id="productDesc" placeholder="Describe the product…" maxlength="300"
                                         oninput="updateDescCounter()" rows="3" class="form-input" style="resize:vertical;"></textarea>
                                     <div class="text-[11px] text-secondary font-bold text-right mt-1"
                                         id="descCounter">0 / 300</div>
                                 </div>
-                                <form action="action="">
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label
-                                                class="block text-[13px] font-extrabold text-primary mb-1.5">Category
-                                                <span class="text-red-500">*</span></label>
-                                            <select name="category" id="productCategory" onchange="updatePreview()"
-                                                class="form-input">
-                                                <option value="">Select category…</option>
-                                                @foreach ($categories as $cat)
-                                                    <option value="{{ $cat->name }}">{{ $cat->name}}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                            <div class="text-[11px] text-red-500 font-bold mt-1 hidden"
-                                                id="catError">
-                                                Please select a category</div>
-                                        </div>
-                                        <div>
-                                            <label class="block text-[13px] font-extrabold text-primary mb-1.5">Unit /
-                                                Weight <span class="text-red-500">*</span></label>
-                                            <input type="text" name="unit" id="productUnit"
-                                                placeholder="e.g. 500g, 1L, 6 pcs" oninput="updatePreview()"
-                                                class="form-input">
-                                            <div class="text-[11px] text-red-500 font-bold mt-1 hidden"
-                                                id="unitError">
-                                                Unit is required</div>
-                                        </div>
+
+                                {{-- 
+                                     HTML does not allow forms inside forms. The category and unit
+                                     inputs belong to the outer #productForm, not a separate form. --}}
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-[13px] font-extrabold text-primary mb-1.5">
+                                            Category <span class="text-red-500">*</span>
+                                        </label>
+                                        {{-- name="category" → $request->category in store()
+                                             Options are populated by Blade from $categories (from DB) --}}
+                                        <select name="category" id="productCategory" onchange="updatePreview()"
+                                            class="form-input">
+                                            <option value="">Select category…</option>
+                                            @foreach ($categories as $cat)
+                                                <option value="{{ $cat->name }}">{{ $cat->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <div class="text-[11px] text-red-500 font-bold mt-1 hidden" id="catError">
+                                            Please select a category</div>
                                     </div>
-                                </form>
+                                    <div>
+                                        <label class="block text-[13px] font-extrabold text-primary mb-1.5">
+                                            Unit / Weight <span class="text-red-500">*</span>
+                                        </label>
+                                        {{-- name="unit" → $request->unit in store() --}}
+                                        <input type="text" name="unit" id="productUnit"
+                                            placeholder="e.g. 500g, 1L, 6 pcs" oninput="updatePreview()"
+                                            class="form-input">
+                                        <div class="text-[11px] text-red-500 font-bold mt-1 hidden" id="unitError">
+                                            Unit is required</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Pricing -->
+                        {{-- Pricing card --}}
                         <div class="card overflow-hidden">
                             <div class="card-header">
                                 <div class="card-header-icon">💰</div>
@@ -1139,10 +1243,12 @@
                             <div class="p-6">
                                 <div class="grid grid-cols-2 gap-4 mb-2">
                                     <div>
-                                        <label class="block text-[13px] font-extrabold text-primary mb-1.5">Selling
-                                            Price <span class="text-red-500">*</span></label>
+                                        <label class="block text-[13px] font-extrabold text-primary mb-1.5">
+                                            Selling Price <span class="text-red-500">*</span>
+                                        </label>
                                         <div class="relative">
                                             <div class="input-prefix">RS</div>
+                                            {{-- name="price" → $request->price in store() --}}
                                             <input type="number" name="price" id="productPrice" placeholder="0"
                                                 min="0" oninput="updatePreview()" class="form-input"
                                                 style="padding-left:52px;">
@@ -1151,25 +1257,30 @@
                                             Price is required</div>
                                     </div>
                                     <div>
-                                        <label class="block text-[13px] font-extrabold text-primary mb-1.5">Compare-at
-                                            Price <span
-                                                class="text-[11px] font-semibold text-secondary ml-1">Optional</span></label>
+                                        <label class="block text-[13px] font-extrabold text-primary mb-1.5">
+                                            Compare-at Price <span
+                                                class="text-[11px] font-semibold text-secondary ml-1">Optional</span>
+                                        </label>
                                         <div class="relative">
                                             <div class="input-prefix">RS</div>
+                                            {{-- No name= here, so this is NOT sent to the server.
+                                                 It's only used by JS to calculate and show the discount % badge --}}
                                             <input type="number" id="comparePrice" placeholder="0" min="0"
                                                 oninput="updatePreview()" class="form-input"
                                                 style="padding-left:52px;">
                                         </div>
                                     </div>
                                 </div>
-                                <div id="discountBadge" class="hidden mt-1"><span
-                                        style="background:#e8f5e9;color:#2e7d32;"
-                                        class="text-xs font-extrabold px-2.5 py-1 rounded-lg">🏷️ <span
-                                            id="discountPct"></span>% OFF shown to customers</span></div>
+                                <div id="discountBadge" class="hidden mt-1">
+                                    <span style="background:#e8f5e9;color:#2e7d32;"
+                                        class="text-xs font-extrabold px-2.5 py-1 rounded-lg">
+                                        🏷️ <span id="discountPct"></span>% OFF shown to customers
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Image Upload -->
+                        {{-- Image Upload card --}}
                         <div class="card overflow-hidden">
                             <div class="card-header">
                                 <div class="card-header-icon">🖼️</div>
@@ -1180,12 +1291,14 @@
                                 </div>
                             </div>
                             <div class="p-6">
+                                {{-- Clicking the zone triggers the hidden file input --}}
                                 <div id="uploadZone"
                                     class="upload-zone border-2 border-dashed rounded-2xl p-7 text-center relative"
                                     style="border-color:var(--border);background:var(--input-bg);"
                                     onclick="document.getElementById('imageInput').click()">
+                                    {{-- name="image" → $request->file('image') in store() --}}
                                     <input type="file" name="image" id="imageInput" accept="image/*"
-                                        onchange="handleImageUpload(event)" class="hidden">
+                                        class="hidden">
                                     <div id="uploadDefault">
                                         <div class="text-4xl mb-2.5">📸</div>
                                         <div class="font-extrabold text-sm text-primary mb-1">Click to upload product
@@ -1199,16 +1312,17 @@
                                             alt="Preview">
                                         <div
                                             class="upload-preview-overlay absolute inset-0 bg-black/45 rounded-xl items-center justify-center text-white font-extrabold text-[13px] gap-1.5">
-                                            📷 Change Image</div>
+                                            📷 Change Image
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- RIGHT COLUMN -->
+                    {{-- RIGHT COLUMN --}}
                     <div class="flex flex-col gap-5">
-                        <!-- Live Preview -->
+                        {{-- Live Preview — purely cosmetic, no backend connection --}}
                         <div class="card overflow-hidden">
                             <div class="card-header">
                                 <div class="card-header-icon">👁️</div>
@@ -1246,7 +1360,8 @@
                             </div>
                         </div>
 
-                        <!-- Tag -->
+                        {{-- Product Tag — hidden radio inputs, styled labels.
+                             name="tag" → $request->tag in store() --}}
                         <div class="card overflow-hidden">
                             <div class="card-header">
                                 <div class="card-header-icon">🏷️</div>
@@ -1259,37 +1374,49 @@
                                     <input type="radio" name="tag" id="tagNone" value=""
                                         class="tag-option" checked onchange="updateTag()">
                                     <label for="tagNone" class="tag-label">No Tag</label>
+
                                     <input type="radio" name="tag" id="tagFresh" value="Fresh"
                                         class="tag-option" onchange="updateTag()">
                                     <label for="tagFresh" class="tag-label"
                                         style="border-color:#c8e6c9;color:#2e7d32;">🌿 Fresh</label>
+
                                     <input type="radio" name="tag" id="tagNew" value="New"
                                         class="tag-option" onchange="updateTag()">
                                     <label for="tagNew" class="tag-label"
                                         style="border-color:#bbdefb;color:#0d47a1;">✨ New</label>
+
                                     <input type="radio" name="tag" id="tagOrganic" value="Organic"
                                         class="tag-option" onchange="updateTag()">
                                     <label for="tagOrganic" class="tag-label"
                                         style="border-color:#e1bee7;color:#6a1b9a;">🌱 Organic</label>
+
                                     <input type="radio" name="tag" id="tagBest" value="Best Seller"
                                         class="tag-option" onchange="updateTag()">
                                     <label for="tagBest" class="tag-label"
                                         style="border-color:#ffe0b2;color:#e65100;">🔥 Best Seller</label>
+
                                     <input type="radio" name="tag" id="tagPopular" value="Popular"
                                         class="tag-option" onchange="updateTag()">
                                     <label for="tagPopular" class="tag-label"
                                         style="border-color:#fce4ec;color:#880e4f;">⭐ Popular</label>
+
                                     <input type="radio" name="tag" id="tagHealthy" value="Healthy"
                                         class="tag-option" onchange="updateTag()">
                                     <label for="tagHealthy" class="tag-label"
                                         style="border-color:#b2dfdb;color:#004d40;">💚 Healthy</label>
-                                    <label for="tagHealthy" class="tag-label"
-                                        style="border-color:#b2dfdb;color:#e65100;">🇳🇵PopularfromNepal </label>
+
+                                    {{-- 
+                                         Previously it was just a <label> with no matching <input>,
+                                         so clicking it did nothing and the value was never submitted. --}}
+                                    <input type="radio" name="tag" id="tagNepal" value="PopularfromNepal"
+                                        class="tag-option" onchange="updateTag()">
+                                    <label for="tagNepal" class="tag-label"
+                                        style="border-color:#b2dfdb;color:#e65100;">🇳🇵 PopularfromNepal</label>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Inventory -->
+                        {{-- Inventory card --}}
                         <div class="card overflow-hidden">
                             <div class="card-header">
                                 <div class="card-header-icon">📦</div>
@@ -1299,8 +1426,10 @@
                                 </div>
                             </div>
                             <div class="p-6">
-                                <label class="block text-[13px] font-extrabold text-primary mb-1.5">Stock Quantity
-                                    <span class="text-red-500">*</span></label>
+                                <label class="block text-[13px] font-extrabold text-primary mb-1.5">
+                                    Stock Quantity <span class="text-red-500">*</span>
+                                </label>
+                                {{-- name="stock_quantity" → $request->stock_quantity in store() --}}
                                 <input name="stock_quantity" type="number" id="stockQty" placeholder="0"
                                     min="0" oninput="updateStock()" class="form-input">
                                 <div id="stockDisplay"
@@ -1322,9 +1451,16 @@
             </div>
         </form>
 
-    </div><!-- end main -->
+    </div>{{-- end main --}}
 
-    <!-- ══ EDIT PRODUCT MODAL ══ -->
+    {{-- ══ EDIT PRODUCT MODAL ══
+         HOW IT CONNECTS TO THE BACKEND:
+         1. JS openEditModal(p) is called with the full product object
+         2. It fills in all the input values from that product
+         3. It sets editForm.action = /admin/products/{id}
+         4. @method('PUT') adds a hidden _method=PUT field
+         5. On submit: browser sends POST /admin/products/5 with _method=PUT
+         6. Laravel reads _method=PUT and routes it to AdminController@update(5) --}}
     <div id="editModal" class="modal-backdrop">
         <div class="modal-box p-0 w-[580px]">
             <div class="flex items-center justify-between px-6 py-4" style="border-bottom:1px solid var(--border);">
@@ -1333,6 +1469,7 @@
                     class="rounded-full w-8 h-8 text-lg cursor-pointer font-nunito text-primary border-none"
                     style="background:var(--input-bg);">✕</button>
             </div>
+            {{-- action is set dynamically by openEditModal() JS function --}}
             <form id="editForm" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
@@ -1360,8 +1497,7 @@
                                     class="text-red-500">*</span></label>
                             <select name="category" id="edit_category" class="form-input">
                                 @foreach ($categories as $cat)
-                                    <option value="{{ $cat->name }}">
-                                        {{ $cat->name }}</option>
+                                    <option value="{{ $cat->name }}">{{ $cat->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -1408,27 +1544,40 @@
         </div>
     </div>
 
-    <!-- ══ DELETE MODAL ══ -->
+    {{-- ══ DELETE MODAL ══
+         HOW IT CONNECTS TO THE BACKEND:
+         1. JS openDeleteModal(id, name) is called
+         2. It puts the product name in the modal text
+         3. It sets deleteForm.action = /admin/products/{id}
+         4. @method('DELETE') adds hidden _method=DELETE
+         5. Clicking "Yes, Delete" submits the form
+         6. Browser sends POST /admin/products/5 with _method=DELETE
+         7. Laravel routes to AdminController@destroy(5)
+         8. destroy() deletes image file and DB row, then redirects to /admin --}}
     <div id="deleteModal" class="modal-backdrop">
         <div class="modal-box p-6 w-[400px] text-center">
             <div class="text-5xl mb-3">🗑️</div>
             <div class="font-black text-lg text-primary mb-1">Delete Product?</div>
-            <div class="text-sm text-secondary mb-6">Are you sure you want to delete <strong id="deleteProductName"
-                    class="text-primary"></strong>? This cannot be undone.</div>
+            <div class="text-sm text-secondary mb-6">
+                Are you sure you want to delete <strong id="deleteProductName" class="text-primary"></strong>? This
+                cannot be undone.
+            </div>
             <div class="flex gap-3">
                 <button onclick="closeDeleteModal()" class="btn-ghost flex-1">Cancel</button>
+                {{-- action is dynamically set by openDeleteModal() JS --}}
                 <form id="deleteForm" method="POST" class="flex-1 m-0">
                     @csrf
                     @method('DELETE')
                     <button type="submit"
-                        class="w-full bg-red-500 hover:bg-red-600 text-white border-none rounded-xl py-2.5 font-extrabold text-sm cursor-pointer font-nunito transition-colors">Yes,
-                        Delete</button>
+                        class="w-full bg-red-500 hover:bg-red-600 text-white border-none rounded-xl py-2.5 font-extrabold text-sm cursor-pointer font-nunito transition-colors">
+                        Yes, Delete
+                    </button>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- ══ ORDER DETAIL MODAL ══ -->
+    {{-- ══ ORDER DETAIL MODAL ══ (JS-only, no backend connection yet) --}}
     <div id="orderModal" class="modal-backdrop">
         <div class="modal-box p-0 w-[500px]">
             <div class="flex items-center justify-between px-6 py-4" style="border-bottom:1px solid var(--border);">
@@ -1441,7 +1590,7 @@
         </div>
     </div>
 
-    <!-- ══ CUSTOMER DETAIL MODAL ══ -->
+    {{-- ══ CUSTOMER DETAIL MODAL ══ (JS-only, no backend connection yet) --}}
     <div id="customerModal" class="modal-backdrop">
         <div class="modal-box p-0 w-[480px]">
             <div class="flex items-center justify-between px-6 py-4" style="border-bottom:1px solid var(--border);">
@@ -1454,9 +1603,12 @@
         </div>
     </div>
 
-
-
-    <!-- ══ CATEGORY MODAL ══ -->
+    {{-- ══ CATEGORY MODAL ══
+         HOW IT CONNECTS TO THE BACKEND:
+         ADD: openCatModal() sets form.action=/categories, _method=POST
+              → CategoryController@store() runs
+         EDIT: openEditCatModal(id,...) sets form.action=/categories/{id}, _method=PUT
+               → CategoryController@update(id) runs --}}
     <div id="catModal" class="modal-backdrop">
         <div class="modal-box p-0 w-[440px]">
             <div class="flex items-center justify-between px-6 py-4" style="border-bottom:1px solid var(--border);">
@@ -1465,13 +1617,14 @@
                     class="rounded-full w-8 h-8 text-lg cursor-pointer font-nunito text-primary border-none"
                     style="background:var(--input-bg);">✕</button>
             </div>
+            {{-- action and _method are set dynamically by openCatModal() / openEditCatModal() --}}
             <form id="catForm" action="/categories" method="POST" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="_method" id="catMethod" value="POST">
                 <div class="p-6 flex flex-col gap-4">
                     <div>
-                        <label name="name" class="block text-xs font-extrabold text-secondary mb-1.5">Name <span
-                                class="text-red-500">*</span>
+                        <label class="block text-xs font-extrabold text-secondary mb-1.5">
+                            Name <span class="text-red-500">*</span>
                             <span class="text-red-500 text-sm">
                                 @error('name')
                                     {{ $message }}
@@ -1481,7 +1634,6 @@
                         <input type="text" name="name" id="catName" placeholder="e.g. Frozen Foods"
                             class="form-input">
                     </div>
-                    
                     <div>
                         <label class="block text-xs font-extrabold text-secondary mb-1.5">Description</label>
                         <textarea name="description" id="catDesc" rows="2" class="form-input" style="resize:none;"></textarea>
@@ -1511,7 +1663,8 @@
             </form>
         </div>
     </div>
-    <!-- ══ DELIVERY ZONE MODAL ══ -->
+
+    {{-- ══ DELIVERY ZONE MODAL ══ (JS-only, no backend connection yet) --}}
     <div id="deliveryModal" class="modal-backdrop">
         <div class="modal-box p-0 w-[480px]">
             <div class="flex items-center justify-between px-6 py-4" style="border-bottom:1px solid var(--border);">
@@ -1532,14 +1685,13 @@
                     <div><label class="block text-xs font-extrabold text-secondary mb-1.5">Delivery Fee
                             (RS)</label><input type="number" id="dz_fee" placeholder="0 for free" min="0"
                             class="form-input"></div>
-                    <div><label class="block text-xs font-extrabold text-secondary mb-1.5">Est. Delivery Time</label>
-                        <select id="dz_time" class="form-input">
+                    <div><label class="block text-xs font-extrabold text-secondary mb-1.5">Est. Delivery
+                            Time</label><select id="dz_time" class="form-input">
                             <option>30–45 min</option>
                             <option selected>45–60 min</option>
                             <option>1–2 hours</option>
                             <option>Same day</option>
-                        </select>
-                    </div>
+                        </select></div>
                 </div>
                 <div class="flex items-center gap-3"><label class="switch"><input type="checkbox" id="dz_active"
                             checked><span class="slider"></span></label><span
@@ -1552,7 +1704,7 @@
         </div>
     </div>
 
-    <!-- ══ DISCOUNT MODAL ══ -->
+    {{-- ══ DISCOUNT MODAL ══ (JS-only, no backend connection yet) --}}
     <div id="discountModal" class="modal-backdrop">
         <div class="modal-box p-0 w-[440px]">
             <div class="flex items-center justify-between px-6 py-4" style="border-bottom:1px solid var(--border);">
@@ -1566,12 +1718,11 @@
                             class="text-red-500">*</span></label><input type="text" id="dc_code"
                         placeholder="e.g. SAVE20" class="form-input" style="text-transform:uppercase;"></div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-xs font-extrabold text-secondary mb-1.5">Type</label>
-                        <select id="dc_type" class="form-input">
+                    <div><label class="block text-xs font-extrabold text-secondary mb-1.5">Type</label><select
+                            id="dc_type" class="form-input">
                             <option value="percent">Percentage (%)</option>
                             <option value="flat">Flat Amount (RS)</option>
-                        </select>
-                    </div>
+                        </select></div>
                     <div><label class="block text-xs font-extrabold text-secondary mb-1.5">Value</label><input
                             type="number" id="dc_value" placeholder="20" min="0" class="form-input">
                     </div>
@@ -1589,7 +1740,7 @@
         </div>
     </div>
 
-    <!-- Toast -->
+    {{-- Toast notification element (always in DOM, shown/hidden by JS) --}}
     <div id="toast"
         class="toast fixed bottom-8 right-8 px-5 py-3.5 rounded-2xl text-sm font-bold flex items-center gap-2.5 shadow-2xl z-[999]"
         style="background:#1a1a2e;color:#fff;">
@@ -1598,167 +1749,30 @@
 
 
     <script>
-        // ══ REAL PRODUCTS FROM LARAVEL (dynamic) ══
+        // JAVASCRIPT SECTION
 
-        // product ajax 
+        // Remember: JS here ONLY handles UI things (show/hide, previews, validation).
+        // All actual data changes go through HTML forms → Laravel controller → Database.
+
+
+
+        // ── PRODUCTS DATA ──
+
+        // @jsonis a Blade directive Laravel converts the PHP $products collection */;
+        // into a JSON string and prints it directly into the JS. So this line becomes:
+        //   let products = [{"id":1,"name":"Tomato",...}, {"id":2,...}]
+        // This is how your backend data gets into JavaScript.
         let products = @json($products->items());
-        let currentPage = 1;
-
-        // Dummy data for orders and customers
-        let orders = [
-            {id:1, customer:'John Doe', items:'2 items', date:'2024-03-15', total:'150.00', status:'Delivered'},
-            {id:2, customer:'Jane Smith', items:'1 item', date:'2024-03-14', total:'75.50', status:'Processing'},
-            {id:3, customer:'Bob Johnson', items:'3 items', date:'2024-03-13', total:'225.00', status:'Pending'},
-            {id:4, customer:'Alice Brown', items:'1 item', date:'2024-03-12', total:'50.00', status:'Delivered'},
-            {id:5, customer:'Charlie Wilson', items:'2 items', date:'2024-03-11', total:'120.00', status:'Cancelled'}
-        ];
-        let customers = [
-            {name:'John Doe', email:'john@example.com', phone:'+977 98XXXXXXXX', address:'Kathmandu, Nepal', orders:5, joined:'2024-01-15', total:750, status:'Active'},
-            {name:'Jane Smith', email:'jane@example.com', phone:'+977 98XXXXXXXX', address:'Pokhara, Nepal', orders:3, joined:'2024-02-20', total:450, status:'Active'},
-            {name:'Bob Johnson', email:'bob@example.com', phone:'+977 98XXXXXXXX', address:'Lalitpur, Nepal', orders:2, joined:'2024-03-10', total:300, status:'Active'}
-        ];
-
-        function fetchProducts(page = 1) {
-            fetch(`/admin?page=${page}`, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(r => r.json())
-                .then(data => {
-                    products = data.products;
-                    renderProducts(products);
-                    document.getElementById('paginationContainer').innerHTML = data.pagination;
-                    bindPaginationLinks();
-                });
-        }
-
-        function bindPaginationLinks() {
-            document.querySelectorAll('#paginationContainer a').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const url = new URL(this.href);
-                    const page = url.searchParams.get('page') || 1;
-                    fetchProducts(page);
-                });
-            });
-        }
 
 
-        // ══ STATIC DATA ══
-        const orders = [{
-                id: 'ORD-001',
-                customer: 'Ram Sharma',
-                email: 'ram@example.com',
-                phone: '9841234567',
-                address: 'Thamel, Kathmandu',
-                items: 'Fresh Tomatoes × 2, Bananas × 1',
-                total: 95,
-                status: 'Pending',
-                date: '2026-03-29',
-                payment: 'Cash on Delivery'
-            },
-            {
-                id: 'ORD-002',
-                customer: 'Sita Thapa',
-                email: 'sita@example.com',
-                phone: '9851234567',
-                address: 'Lazimpat, Kathmandu',
-                items: 'Full Cream Milk × 2',
-                total: 150,
-                status: 'Processing',
-                date: '2026-03-29',
-                payment: 'eSewa'
-            },
-            {
-                id: 'ORD-003',
-                customer: 'Hari Pradhan',
-                email: 'hari@example.com',
-                phone: '9861234567',
-                address: 'Kupondole, Lalitpur',
-                items: 'Mixed Nuts × 1, Dark Chocolate × 2',
-                total: 365,
-                status: 'Delivered',
-                date: '2026-03-28',
-                payment: 'Khalti'
-            },
-            {
-                id: 'ORD-004',
-                customer: 'Anita KC',
-                email: 'anita@example.com',
-                phone: '9871234567',
-                address: 'Jawalakhel, Lalitpur',
-                items: 'Almond Milk × 1, Orange Juice × 1',
-                total: 270,
-                status: 'Pending',
-                date: '2026-03-28',
-                payment: 'Cash on Delivery'
-            },
-            {
-                id: 'ORD-005',
-                customer: 'Bijay Lama',
-                email: 'bijay@example.com',
-                phone: '9881234567',
-                address: 'Durbar Square, Bhaktapur',
-                items: 'Sourdough Bread × 3',
-                total: 255,
-                status: 'Processing',
-                date: '2026-03-27',
-                payment: 'eSewa'
-            },
-        ];
+        // You had them declared twice (once with let, once with const) which causes
+        // a JavaScript error: "Cannot redeclare block-scoped variable".
+        // Kept only the detailed versions with email, phone, address etc.
+        const orders = @json($orders->items());
+        const customers = @json($customers);
 
-        const customers = [{
-                id: 'USR-001',
-                name: 'Ram Sharma',
-                email: 'ram@example.com',
-                phone: '9841234567',
-                address: 'House No. 12, Thamel Marg, Kathmandu 44600',
-                gender: 'Male',
-                dob: '1990-05-14',
-                joined: '2025-11-03',
-                orders: 8,
-                total: 2340,
-                status: 'Active'
-            },
-            {
-                id: 'USR-002',
-                name: 'Sita Thapa',
-                email: 'sita@example.com',
-                phone: '9851234567',
-                address: 'Flat 3B, Lazimpat Height, Kathmandu 44600',
-                gender: 'Female',
-                dob: '1994-08-22',
-                joined: '2025-12-18',
-                orders: 5,
-                total: 1200,
-                status: 'Active'
-            },
-            {
-                id: 'USR-003',
-                name: 'Hari Pradhan',
-                email: 'hari@example.com',
-                phone: '9861234567',
-                address: 'Ward No. 7, Kupondole, Lalitpur 44700',
-                gender: 'Male',
-                dob: '1988-02-10',
-                joined: '2026-01-05',
-                orders: 12,
-                total: 4890,
-                status: 'Active'
-            },
-        ];
 
-        let categories = [{}
-
-        ];
-
-        // Count products per category from real data
-        products.forEach(p => {
-            const c = categories.find(x => x.name === p.category);
-            if (c) c.count++;
-        });
-
+        // Dummy JS-only delivery zones (not connected to DB yet)
         let deliveryZones = [{
                 id: 1,
                 name: 'Kathmandu Core',
@@ -1788,17 +1802,24 @@
             },
         ];
 
+        // Discount codes stored in memory only (not saved to DB)
         let discounts = [];
-        let editingCatId = null;
+
+        // Featured product IDs (JS Set, not saved to DB)
         let featuredIds = new Set();
 
+        // Emoji map for categories (used in product table and featured grid)
         const catEmoji = {};
-        const statusColor = {
+
+        // CSS styles for order status badges
+        const stausColor = {
             Pending: 'background:#fff7ed;color:#ea580c;',
             Processing: 'background:#eff6ff;color:#2563eb;',
             Delivered: 'background:#f0fdf4;color:#16a34a;',
             Cancelled: 'background:#fef2f2;color:#dc2626;'
         };
+
+        // Colours for product tag badges
         const tagMeta = {
             Fresh: {
                 bg: '#e8f5e9',
@@ -1828,10 +1849,9 @@
                 bg: '#fff3e0',
                 color: '#e65100'
             },
-
         };
 
-        // ══ NAVIGATION ══
+        // Breadcrumb text for each page
         const pageTitles = {
             dashboard: 'Dashboard',
             products: 'Products',
@@ -1845,27 +1865,50 @@
             delivery: 'Settings &nbsp;/&nbsp; <span class="text-primary">Delivery Zones</span>',
         };
 
+
+        // ── NAVIGATION ──
+        // This function makes your sidebar work WITHOUT page reloads.
+        // All page sections are in the HTML but hidden (display:none).
+        // navigate() shows the requested one and hides all others.
+        // This is NOT connected to the backend — it's purely visual.
         function navigate(page) {
+            // Hide all page sections
             document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+            // Remove active highlight from all nav items
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+            // Show the requested page section
             const target = document.getElementById('page-' + page);
             if (target) target.classList.add('active');
+
+            // Highlight the correct nav item
             const nav = document.getElementById('nav-' + page);
             if (nav) nav.classList.add('active');
+
+            // Update breadcrumb text at top
             document.getElementById('breadcrumbText').innerHTML = pageTitles[page] || page;
+
+            // When navigating to these pages, render their content
             if (page === 'products') renderProducts(products);
             if (page === 'orders') renderOrders();
             if (page === 'customers') renderCustomers();
-            if (page === 'categories') renderCategories();
             if (page === 'delivery') renderDeliveryZones();
             if (page === 'banner') renderFeatured();
             if (page === 'discounts') renderDiscounts();
+
+
             closeProfileDropdown();
-            return false;
+            return false; // prevent anchor tag from scrolling to top
         }
+
+        // Show dashboard on first load
         navigate('dashboard');
 
-        // ══ DARK MODE ══
+
+        // ── DARK MODE ──
+        // Toggles data-theme attribute on <html> element.
+        // CSS variables pick up the change automatically.
+        // localStorage remembers the preference between visits.
         function toggleDarkMode() {
             const html = document.documentElement;
             const isDark = html.getAttribute('data-theme') === 'dark';
@@ -1873,13 +1916,15 @@
             document.getElementById('dmBtn').textContent = isDark ? '🌙 Dark' : '☀️ Light';
             localStorage.setItem('theme', isDark ? 'light' : 'dark');
         }
+        // Apply saved theme on page load
         const saved = localStorage.getItem('theme');
         if (saved) {
             document.documentElement.setAttribute('data-theme', saved);
             document.getElementById('dmBtn').textContent = saved === 'dark' ? '☀️ Light' : '🌙 Dark';
         }
 
-        // ══ PROFILE DROPDOWN ══
+
+        // ── PROFILE DROPDOWN ──
         function toggleProfileDropdown() {
             document.getElementById('profileDropdown').classList.toggle('open');
         }
@@ -1887,111 +1932,154 @@
         function closeProfileDropdown() {
             document.getElementById('profileDropdown').classList.remove('open');
         }
+        // Close dropdown if user clicks anywhere outside it
         document.addEventListener('click', e => {
             if (!e.target.closest('.profile-dropdown') && !e.target.closest('aside > div:last-child > button'))
                 closeProfileDropdown();
         });
 
-        // ══ PRODUCTS TABLE ══
+
+        // ── AJAX PAGINATION ──
+        // When you click a pagination link, instead of the full page reloading,
+        // JS intercepts the click, fetches just the JSON data, and re-renders the table.
+        // The controller detects $request->ajax() and returns JSON instead of a full HTML page.
+        function fetchProducts(page = 1) {
+            fetch(`/admin?page=${page}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    } // tells Laravel it's an AJAX request
+                })
+                .then(r => r.json())
+                .then(data => {
+                    products = data.products; // update JS products array
+                    renderProducts(products); // re-draw the table
+                    document.getElementById('paginationContainer').innerHTML = data
+                    .pagination; // update pagination links
+                    bindPaginationLinks(); // re-attach click handlers to new links
+                });
+        }
+
+        // Attach AJAX click handler to each pagination link
+        function bindPaginationLinks() {
+            document.querySelectorAll('#paginationContainer a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault(); // stop normal link navigation
+                    const url = new URL(this.href);
+                    const page = url.searchParams.get('page') || 1;
+                    fetchProducts(page);
+                });
+            });
+        }
+
+
+        // ── PRODUCTS TABLE RENDERER ──
+        // Takes the products JS array and builds HTML rows for the table.
+        // Each row has Edit and Delete buttons that call their respective JS functions.
+        // IMPORTANT: The actual edit/delete still goes to the server via forms —
+        // these buttons just open the modals and set the form's target URL.
         function renderProducts(list) {
             const tbody = document.getElementById('productsTableBody');
             if (!tbody) return;
+
             if (!list || list.length === 0) {
                 tbody.innerHTML = `<div class="px-6 py-12 text-center text-secondary font-bold">No products found</div>`;
                 return;
             }
+
             tbody.innerHTML = list.map(p => `
-    <div class="flex items-center gap-4 px-6 py-3.5 hover-row transition-colors" style="border-bottom:1px solid var(--border);">
-        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 overflow-hidden" style="background:#e8f5ee;">
-            ${p.image ? `<img src="/storage/${p.image}" class="w-full h-full object-cover" onerror="this.style.display='none'">` : (catEmoji[p.category] || '📦')}
-        </div>
-        <div class="flex-1 min-w-0">
-            <div class="font-bold text-sm text-primary truncate">${p.name}</div>
-            <div class="text-xs text-secondary font-semibold">${p.category} &nbsp;·&nbsp; ${p.unit}</div>
-        </div>
-        ${p.tag ? `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded-lg" style="background:#e8f5ee;color:#0c7a3e;">${p.tag}</span>` : ''}
-        <div class="font-extrabold text-sm text-primary min-w-[70px] text-right">RS ${parseFloat(p.price).toFixed(0)}</div>
-        <div class="text-xs text-secondary min-w-[50px] text-center">${p.stock_quantity ?? 0} pcs</div>
-        <div class="flex gap-1.5">
-            <button onclick='openEditModal(${JSON.stringify(p).replace(/'/g,"\\'")})'  class="btn-edit">✏️ Edit</button>
-            <button onclick="openDeleteModal(${p.id}, '${p.name.replace(/'/g, "\\'")}')" class="btn-danger">🗑️</button>
-        </div>
-    </div>`).join('');
+                <div class="flex items-center gap-4 px-6 py-3.5 hover-row transition-colors" style="border-bottom:1px solid var(--border);">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 overflow-hidden" style="background:#e8f5ee;">
+                        ${p.image
+                            ? `<img src="/storage/${p.image}" class="w-full h-full object-cover" onerror="this.style.display='none'">`
+                            : (catEmoji[p.category] || '📦')}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-bold text-sm text-primary truncate">${p.name}</div>
+                        <div class="text-xs text-secondary font-semibold">${p.category} &nbsp;·&nbsp; ${p.unit}</div>
+                    </div>
+                    ${p.tag ? `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded-lg" style="background:#e8f5ee;color:#0c7a3e;">${p.tag}</span>` : ''}
+                    <div class="font-extrabold text-sm text-primary min-w-[70px] text-right">RS ${parseFloat(p.price).toFixed(0)}</div>
+                    <div class="text-xs text-secondary min-w-[50px] text-center">${p.stock_quantity ?? 0} pcs</div>
+                    <div class="flex gap-1.5">
+                       
+                        <button onclick='openEditModal(${JSON.stringify(p).replace(/'/g, "\\'")})' class="btn-edit">✏️ Edit</button>
+                       
+                        <button onclick="openDeleteModal(${p.id}, '${p.name.replace(/'/g, "\\'")}')" class="btn-danger">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
         }
 
+        // Filter table as user types in search box (client-side, no server request)
         function filterTable() {
             const q = document.getElementById('productSearch').value.toLowerCase();
-            renderProducts(products.filter(p => p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q)));
+            renderProducts(products.filter(p =>
+                p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q)
+            ));
         }
 
-        // ══ ORDERS ══
-        function renderOrders() {
-            document.getElementById('ordersBody').innerHTML = orders.map(o => `
-    <div class="flex items-center gap-4 px-6 py-4 hover-row transition-colors" style="border-bottom:1px solid var(--border);">
-        <div class="font-extrabold text-sm text-primary w-24">#${o.id}</div>
-        <div class="flex-1"><div class="font-bold text-sm text-primary">${o.customer}</div><div class="text-xs text-secondary mt-0.5">${o.items}</div></div>
-        <div class="text-xs text-secondary hidden md:block">${o.date}</div>
-        <div class="text-sm font-bold text-primary min-w-[60px] text-right">RS ${o.total}</div>
-        <span class="text-xs font-extrabold px-2.5 py-1 rounded-lg" style="${statusColor[o.status]}">${o.status}</span>
-        <button onclick='openOrderDetail(${JSON.stringify(o).replace(/'/g,"\\'")})' style="background:var(--input-bg);" class="border-none rounded-lg px-2.5 py-1.5 text-xs font-bold cursor-pointer font-nunito text-primary hover-row">View</button>
-    </div>`).join('');
-        }
 
-        // ══ CUSTOMERS ══
-        function renderCustomers() {
-            document.getElementById('customersBody').innerHTML = customers.map(c => {
-                const initials = c.name.split(' ').map(w => w[0]).join('').slice(0, 2);
-                return `<div class="flex items-center gap-4 px-6 py-4 hover-row transition-colors" style="border-bottom:1px solid var(--border);">
-            <div class="w-10 h-10 rounded-full flex items-center justify-center font-black text-sm shrink-0" style="background:#e8f5ee;color:#0c7a3e;">${initials}</div>
+        // ── ORDERS TABLE RENDERER ──
+       function renderOrders() {
+    document.getElementById('ordersBody').innerHTML = orders.map(o => `
+        <div class="flex items-center gap-4 px-6 py-4 hover-row" style="border-bottom:1px solid var(--border);">
+            <div class="font-extrabold text-sm text-primary w-28">#ARB-${o.id}</div>
             <div class="flex-1">
-                <div class="font-bold text-sm text-primary">${c.name}</div>
-                <div class="text-xs text-secondary">${c.email} · ${c.phone}</div>
-                <div class="text-xs text-secondary mt-0.5">📍 ${c.address}</div>
+                <div class="font-bold text-sm text-primary">${o.user?.name ?? 'Guest'}</div>
+                <div class="text-xs text-secondary mt-0.5">${o.order_items?.length ?? 0} item(s)</div>
             </div>
-            <div class="text-center hidden md:block"><div class="text-xs font-bold text-secondary">${c.orders} orders</div><div class="text-xs text-secondary">Joined ${c.joined}</div></div>
-            <div class="text-sm font-extrabold text-primary min-w-[70px] text-right">RS ${c.total.toLocaleString()}</div>
-            <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-lg" style="background:#f0fdf4;color:#16a34a;">${c.status}</span>
-            <button onclick='openCustomerDetail(${JSON.stringify(c).replace(/'/g,"\\'")})' style="background:var(--input-bg);" class="border-none rounded-lg px-2.5 py-1.5 text-xs font-bold cursor-pointer font-nunito text-primary">View</button>
-        </div>`;
-            }).join('');
-        }
-
-        // ══ CATEGORIES ══
-        function renderCategories() {
-            document.getElementById('categoriesGrid').innerHTML = categories.map(c => `
-    <div class="card p-5 cat-card flex items-center gap-3 relative group">
-        <div class="text-3xl">${c.emoji}</div>
-        <div class="flex-1">
-            <div class="font-extrabold text-sm text-primary">${c.name}</div>
-            <div class="text-xs text-secondary font-semibold">${c.count} products</div>
-            ${!c.visible ? '<div class="text-[10px] text-orange-500 font-bold">Hidden</div>' : ''}
+            <div class="text-xs text-secondary">${o.created_at?.slice(0,10) ?? ''}</div>
+            <div class="text-sm font-bold text-primary">RS ${parseFloat(o.total_amount ?? 0).toFixed(0)}</div>
+            <span class="text-xs font-extrabold px-2.5 py-1 rounded-lg" style="${stausColor[o.stus] ?? stausColor['Pending']}">${o.staus ?? 'pending'}</span>
+            <button onclick='openOrderDetail(${JSON.stringify(o).replace(/'/g, "\\'")})' 
+                style="background:var(--input-bg);" 
+                class="border-none rounded-lg px-2.5 py-1.5 text-xs font-bold cursor-pointer font-nunito text-primary">View</button>
         </div>
-        <div class="cat-actions flex gap-1.5 absolute right-4 top-4">
-            <button onclick="editCat(${c.id})" class="btn-edit text-[11px] px-2 py-1">✏️</button>
-            <button onclick="deleteCat(${c.id})" class="btn-danger text-[11px] px-2 py-1">🗑️</button>
-        </div>
-    </div>`).join('') + `
-    <button onclick="openCatModal()" class="card p-5 flex flex-col items-center justify-center gap-2 text-secondary cursor-pointer hover-row transition-all" style="border:2px dashed var(--border);border-radius:16px;min-height:80px;">
-        <div class="text-2xl">➕</div><div class="text-sm font-bold">Add Category</div>
-    </button>`;
-        }
+    `).join('');
+}
 
+        // ── CUSTOMERS TABLE RENDERER ──
+        function renderCustomers() {
+    document.getElementById('customersBody').innerHTML = customers.map(c => {
+        const initials = c.name.split(' ').map(w => w[0]).join('').slice(0, 2);
+        return `
+            <div class="flex items-center gap-4 px-6 py-4 hover-row transition-colors" style="border-bottom:1px solid var(--border);">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center font-black text-sm shrink-0" style="background:#e8f5ee;color:#0c7a3e;">${initials}</div>
+                <div class="flex-1">
+                    <div class="font-bold text-sm text-primary">${c.name}</div>
+                    <div class="text-xs text-secondary">${c.email}</div>
+                </div>
+                <div class="text-center hidden md:block">
+                    <div class="text-xs font-bold text-secondary">${c.orders_count ?? 0} orders</div>
+                    <div class="text-xs text-secondary">Joined ${c.created_at?.slice(0,10) ?? ''}</div>
+                </div>
+                <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-lg" style="background:#f0fdf4;color:#16a34a;">Active</span>
+                <button onclick='openCustomerDetail(${JSON.stringify(c).replace(/'/g, "\\'")})' style="background:var(--input-bg);" class="border-none rounded-lg px-2.5 py-1.5 text-xs font-bold cursor-pointer font-nunito text-primary">View</button>
+            </div>
+        `;
+    }).join('');
+}
+
+
+        // ── CATEGORY MODAL FUNCTIONS ──
+        // openCatModal: sets up form for ADD (POST to /categories)
         function openCatModal() {
             document.getElementById('catName').value = '';
             document.getElementById('catDesc').value = '';
             document.getElementById('catVisible').checked = true;
             document.getElementById('catModalTitle').textContent = '➕ Add Category';
-            document.getElementById('catForm').action = '/categories';
+            document.getElementById('catForm').action = '/categories'; // → CategoryController@store()
             document.getElementById('catMethod').value = 'POST';
             document.getElementById('catModal').classList.add('open');
         }
 
+        // openEditCatModal: sets up form for EDIT (PUT to /categories/{id})
         function openEditCatModal(id, name, description, isActive) {
             document.getElementById('catName').value = name;
             document.getElementById('catDesc').value = description ?? '';
             document.getElementById('catVisible').checked = isActive;
             document.getElementById('catModalTitle').textContent = '✏️ Edit Category';
-            document.getElementById('catForm').action = `/categories/${id}`;
+            document.getElementById('catForm').action = `/categories/${id}`; // → CategoryController@update(id)
             document.getElementById('catMethod').value = 'PUT';
             document.getElementById('catModal').classList.add('open');
         }
@@ -2001,25 +2089,166 @@
         }
 
 
-        // ══ DELIVERY ══
+        // ── EDIT PRODUCT MODAL ──
+        // Called with full product object from renderProducts() button.
+        // Fills all edit form fields and sets the form action to the correct product URL.
+        function openEditModal(p) {
+            if (typeof p === 'string') p = JSON.parse(p);
+
+            // Fill form fields with current product data
+            document.getElementById('edit_name').value = p.name;
+            document.getElementById('edit_price').value = p.price;
+            document.getElementById('edit_stock').value = p.stock_quantity ?? 0;
+            document.getElementById('edit_category').value = p.category;
+            document.getElementById('edit_unit').value = p.unit;
+            document.getElementById('edit_tag').value = p.tag ?? '';
+            document.getElementById('edit_description').value = p.description ?? '';
+
+            // Set form action → AdminController@update(id) will handle this
+            document.getElementById('editForm').action = `/admin/products/${p.id}`;
+
+            // Show current image if exists
+            if (p.image) {
+                document.getElementById('editCurrentImg').classList.remove('hidden');
+                document.getElementById('editImgPreview').src = `/storage/${p.image}`;
+            } else {
+                document.getElementById('editCurrentImg').classList.add('hidden');
+            }
+
+            document.getElementById('editModal').classList.add('open');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('open');
+        }
+
+
+        // ── DELETE MODAL ──
+        // Called with product id and name from renderProducts() button.
+        // Sets the form action URL so the correct product gets deleted when submitted.
+        function openDeleteModal(id, name) {
+            document.getElementById('deleteProductName').textContent = name;
+            // This is the KEY line: set the form's destination to /admin/products/{id}
+            // When "Yes Delete" is clicked, the form submits to this URL
+            // Laravel routes DELETE /admin/products/{id} → AdminController@destroy(id)
+            document.getElementById('deleteForm').action = `/admin/products/${id}`;
+            document.getElementById('deleteModal').classList.add('open');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('open');
+        }
+
+
+        // ── ORDER DETAIL MODAL ──
+        function infoRow(label, value) {
+            return `<div class="flex items-start gap-2">
+                <span class="text-xs font-extrabold text-secondary w-32 shrink-0 pt-0.5">${label}</span>
+                <span class="text-sm font-semibold text-primary flex-1">${value}</span>
+            </div>`;
+        }
+
+       function openOrderDetail(o) {
+    if (typeof o === 'string') o = JSON.parse(o);
+
+    const itemsList = o.order_items && o.order_items.length
+        ? o.order_items.map(item =>
+            `<div class="flex justify-between text-sm font-semibold text-primary py-1" style="border-bottom:1px solid var(--border);">
+                <span>${item.product?.name ?? 'Product #' + item.product_id}</span>
+                <span class="text-secondary">× ${item.quantity}</span>
+                <span>RS ${parseFloat(item.total_amount ?? 0).toFixed(0)}</span>
+            </div>`
+          ).join('')
+        : '<div class="text-sm text-secondary">No items found</div>';
+
+    document.getElementById('orderDetailBody').innerHTML = `
+        <div class="flex items-center justify-between">
+            <div class="font-black text-xl text-primary">#ARB-${o.id}</div>
+            <span class="text-xs font-extrabold px-2.5 py-1 rounded-lg"
+                style="${stausColor[o.staus] ?? 'background:#fff7ed;color:#ea580c;'}">
+                ${o.staus ?? 'pending'}
+            </span>
+        </div>
+        <div class="p-4 rounded-xl flex flex-col gap-2" style="background:var(--input-bg);border:1px solid var(--border);">
+            ${infoRow('👤 Customer', o.user?.name ?? '—')}
+            ${infoRow('📧 Email',    o.user?.email ?? '—')}
+            ${infoRow('📞 Phone',    o.address?.phone_number ?? '—')}
+            ${infoRow('📍 Address',  o.address ? (o.address.street_address + ', ' + o.address.city) : '—')}
+            ${infoRow('📅 Date',     o.created_at?.slice(0,10) ?? '—')}
+            ${infoRow('💳 Payment',  o.payment_method ?? '—')}
+        </div>
+        <div class="p-4 rounded-xl" style="background:var(--input-bg);border:1px solid var(--border);">
+            <div class="text-xs font-extrabold text-secondary mb-2 uppercase tracking-widest">Items</div>
+            ${itemsList}
+        </div>
+        <div class="flex items-center justify-between p-4 rounded-xl" style="background:var(--input-bg);border:1px solid var(--border);">
+            <div class="font-extrabold text-sm text-primary">Total Amount</div>
+            <div class="font-black text-xl" style="color:#0c7a3e;">RS ${parseFloat(o.total_amount ?? 0).toFixed(0)}</div>
+        </div>
+    `;
+    document.getElementById('orderModal').classList.add('open');
+}
+
+
+        // ── CUSTOMER DETAIL MODAL ──
+        function openCustomerDetail(c) {
+    if (typeof c === 'string') c = JSON.parse(c);
+    const initials = c.name.split(' ').map(w => w[0]).join('').slice(0, 2);
+    document.getElementById('customerDetailBody').innerHTML = `
+        <div class="flex items-center gap-4 mb-5">
+            <div class="w-14 h-14 rounded-full flex items-center justify-center font-black text-xl shrink-0" style="background:#e8f5ee;color:#0c7a3e;">${initials}</div>
+            <div>
+                <div class="font-black text-xl text-primary">${c.name}</div>
+                <div class="text-xs font-bold text-secondary mt-0.5">#USR-${c.id}</div>
+                <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-lg" style="background:#f0fdf4;color:#16a34a;">Active</span>
+            </div>
+        </div>
+        <div class="p-4 rounded-xl flex flex-col gap-2 mb-4" style="background:var(--input-bg);border:1px solid var(--border);">
+            ${infoRow('📧 Email', c.email ?? '—')}
+            ${infoRow('📞 Phone', c.phone ?? '—')}
+            ${infoRow('📍 Address', c.address ?? '—')}
+            ${infoRow('⚧ Gender', c.gender ?? '—')}
+            ${infoRow('🎂 DOB', c.date_of_birth ?? '—')}
+            ${infoRow('📅 Joined', c.created_at?.slice(0,10) ?? '—')}
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+            <div class="p-4 rounded-xl text-center" style="background:var(--input-bg);border:1px solid var(--border);">
+                <div class="text-2xl font-black" style="color:#0c7a3e;">${c.orders_count ?? 0}</div>
+                <div class="text-xs font-bold text-secondary mt-0.5">Total Orders</div>
+            </div>
+            <div class="p-4 rounded-xl text-center" style="background:var(--input-bg);border:1px solid var(--border);">
+                <div class="text-2xl font-black" style="color:#0c7a3e;">—</div>
+                <div class="text-xs font-bold text-secondary mt-0.5">Total Spent</div>
+            </div>
+        </div>
+    `;
+    document.getElementById('customerModal').classList.add('open');
+}
+
+        // ── DELIVERY ZONES (JS-only, not saved to DB) ──
         function renderDeliveryZones() {
             document.getElementById('deliveryZonesBody').innerHTML = deliveryZones.map(z => `
-    <div class="flex items-center gap-4 px-6 py-4 hover-row transition-colors" style="border-bottom:1px solid var(--border);">
-        <div class="text-2xl">📍</div>
-        <div class="flex-1">
-            <div class="flex items-center gap-2">
-                <div class="font-bold text-sm text-primary">${z.name}</div>
-                ${z.active ? '<span class="text-[10px] font-black px-1.5 py-0.5 rounded" style="background:#f0fdf4;color:#16a34a;">Active</span>' : '<span class="text-[10px] font-black px-1.5 py-0.5 rounded" style="background:#f9fafb;color:#9ca3af;">Inactive</span>'}
-            </div>
-            <div class="text-xs text-secondary mt-0.5">${z.areas}</div>
-            <div class="text-xs text-secondary mt-0.5">⏱ ${z.time} &nbsp;·&nbsp; 🛵 ${z.riders} rider${z.riders !== 1 ? 's' : ''}</div>
-        </div>
-        <div class="text-sm font-extrabold min-w-[60px] text-right" style="color:${z.fee === 0 ? '#0c7a3e' : 'var(--text)'};">${z.fee === 0 ? 'FREE' : 'RS ' + z.fee}</div>
-        <div class="flex gap-1.5">
-            <button onclick="toggleZone(${z.id})" class="btn-edit text-[11px] px-2 py-1">${z.active ? 'Disable' : 'Enable'}</button>
-            <button onclick="deleteZone(${z.id})" class="btn-danger text-[11px] px-2 py-1">🗑️</button>
-        </div>
-    </div>`).join('');
+                <div class="flex items-center gap-4 px-6 py-4 hover-row transition-colors" style="border-bottom:1px solid var(--border);">
+                    <div class="text-2xl">📍</div>
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2">
+                            <div class="font-bold text-sm text-primary">${z.name}</div>
+                            ${z.active
+                                ? '<span class="text-[10px] font-black px-1.5 py-0.5 rounded" style="background:#f0fdf4;color:#16a34a;">Active</span>'
+                                : '<span class="text-[10px] font-black px-1.5 py-0.5 rounded" style="background:#f9fafb;color:#9ca3af;">Inactive</span>'}
+                        </div>
+                        <div class="text-xs text-secondary mt-0.5">${z.areas}</div>
+                        <div class="text-xs text-secondary mt-0.5">⏱ ${z.time} &nbsp;·&nbsp; 🛵 ${z.riders} rider${z.riders !== 1 ? 's' : ''}</div>
+                    </div>
+                    <div class="text-sm font-extrabold min-w-[60px] text-right" style="color:${z.fee === 0 ? '#0c7a3e' : 'var(--text)'};">
+                        ${z.fee === 0 ? 'FREE' : 'RS ' + z.fee}
+                    </div>
+                    <div class="flex gap-1.5">
+                        <button onclick="toggleZone(${z.id})" class="btn-edit text-[11px] px-2 py-1">${z.active ? 'Disable' : 'Enable'}</button>
+                        <button onclick="deleteZone(${z.id})" class="btn-danger text-[11px] px-2 py-1">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
         }
 
         function toggleZone(id) {
@@ -2066,7 +2295,8 @@
             showToast('✅ Delivery zone added!');
         }
 
-        // ══ DISCOUNTS ══
+
+        // ── DISCOUNTS (JS-only, not saved to DB) ──
         function openDiscountModal() {
             document.getElementById('discountModal').classList.add('open');
         }
@@ -2103,29 +2333,33 @@
             body.innerHTML =
                 `<div class="px-6 py-4 font-black text-xs text-secondary uppercase tracking-widest" style="border-bottom:1px solid var(--border);">Active Codes</div>` +
                 discounts.map((d, i) => `
-        <div class="flex items-center gap-4 px-6 py-4 hover-row" style="border-bottom:1px solid var(--border);">
-            <div class="font-black text-sm text-primary px-3 py-1.5 rounded-lg" style="background:#e8f5ee;">${d.code}</div>
-            <div class="flex-1">
-                <div class="text-sm font-bold text-primary">${d.type === 'percent' ? d.value+'% off' : 'RS '+d.value+' off'}</div>
-                ${d.min ? `<div class="text-xs text-secondary">Min order: RS ${d.min}</div>` : ''}
-                ${d.expiry ? `<div class="text-xs text-secondary">Expires: ${d.expiry}</div>` : ''}
-            </div>
-            <button onclick="discounts.splice(${i},1);renderDiscounts();showToast('🗑️ Code deleted')" class="btn-danger">Remove</button>
-        </div>`).join('');
+                    <div class="flex items-center gap-4 px-6 py-4 hover-row" style="border-bottom:1px solid var(--border);">
+                        <div class="font-black text-sm text-primary px-3 py-1.5 rounded-lg" style="background:#e8f5ee;">${d.code}</div>
+                        <div class="flex-1">
+                            <div class="text-sm font-bold text-primary">${d.type === 'percent' ? d.value + '% off' : 'RS ' + d.value + ' off'}</div>
+                            ${d.min    ? `<div class="text-xs text-secondary">Min order: RS ${d.min}</div>` : ''}
+                            ${d.expiry ? `<div class="text-xs text-secondary">Expires: ${d.expiry}</div>` : ''}
+                        </div>
+                        <button onclick="discounts.splice(${i},1);renderDiscounts();showToast('🗑️ Code deleted')" class="btn-danger">Remove</button>
+                    </div>
+                `).join('');
         }
 
-        // ══ FEATURED ══
+
+        // ── FEATURED PRODUCTS (JS-only, not saved to DB) ──
         function renderFeatured() {
-            const count = featuredIds.size;
-            document.getElementById('featuredCount').textContent = `${count} / 8 selected`;
+            document.getElementById('featuredCount').textContent = `${featuredIds.size} / 8 selected`;
             document.getElementById('featuredGrid').innerHTML = products.map(p => {
                 const isFeatured = featuredIds.has(p.id);
-                return `<div onclick="toggleFeatured(${p.id})" class="cursor-pointer rounded-xl p-3 transition-all" style="background:${isFeatured ? '#e8f5ee' : 'var(--input-bg)'};border:2px solid ${isFeatured ? '#0c7a3e' : 'var(--border)'};">
-            <div class="text-2xl text-center mb-1">${catEmoji[p.category] || '📦'}</div>
-            <div class="text-xs font-bold text-center" style="color:${isFeatured ? '#0c7a3e' : 'var(--text)'};">${p.name}</div>
-            <div class="text-[10px] text-center mt-0.5 text-secondary">RS ${p.price}</div>
-            ${isFeatured ? '<div class="text-center mt-1"><span class="text-[9px] font-black" style="color:#0c7a3e;">⭐ Featured</span></div>' : ''}
-        </div>`;
+                return `
+                    <div onclick="toggleFeatured(${p.id})" class="cursor-pointer rounded-xl p-3 transition-all"
+                        style="background:${isFeatured ? '#e8f5ee' : 'var(--input-bg)'};border:2px solid ${isFeatured ? '#0c7a3e' : 'var(--border)'};">
+                        <div class="text-2xl text-center mb-1">${catEmoji[p.category] || '📦'}</div>
+                        <div class="text-xs font-bold text-center" style="color:${isFeatured ? '#0c7a3e' : 'var(--text)'};">${p.name}</div>
+                        <div class="text-[10px] text-center mt-0.5 text-secondary">RS ${p.price}</div>
+                        ${isFeatured ? '<div class="text-center mt-1"><span class="text-[9px] font-black" style="color:#0c7a3e;">⭐ Featured</span></div>' : ''}
+                    </div>
+                `;
             }).join('');
         }
 
@@ -2140,7 +2374,8 @@
             showToast(featuredIds.has(id) ? '⭐ Added to featured' : '✅ Removed from featured');
         }
 
-        // ══ BANNER UPLOAD ══
+
+        // ── BANNER UPLOAD (JS-only preview, not saved to DB) ──
         function addBanner(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -2151,104 +2386,24 @@
                 const div = document.createElement('div');
                 div.className = 'relative rounded-xl overflow-hidden group';
                 div.style.height = '140px';
-                div.innerHTML =
-                    `<img src="${e.target.result}" class="w-full h-full object-cover">
-        <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button onclick="this.closest('.relative').remove()" class="bg-white/90 border-none rounded-lg w-7 h-7 text-sm cursor-pointer">🗑️</button>
-        </div>
-        <div class="absolute bottom-2 left-2 bg-green-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded">Active</div>`;
+                div.innerHTML = `
+                    <img src="${e.target.result}" class="w-full h-full object-cover">
+                    <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onclick="this.closest('.relative').remove()" class="bg-white/90 border-none rounded-lg w-7 h-7 text-sm cursor-pointer">🗑️</button>
+                    </div>
+                    <div class="absolute bottom-2 left-2 bg-green-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded">Active</div>
+                `;
                 grid.insertBefore(div, addBtn);
                 showToast('✅ Banner uploaded!');
             };
             reader.readAsDataURL(file);
-            event.target.value = '';
+            event.target.value = ''; // reset input so same file can be selected again
         }
 
-        // ══ EDIT PRODUCT MODAL ══
-        function openEditModal(p) {
-            if (typeof p === 'string') p = JSON.parse(p);
-            document.getElementById('edit_name').value = p.name;
-            document.getElementById('edit_price').value = p.price;
-            document.getElementById('edit_stock').value = p.stock_quantity ?? 0;
-            document.getElementById('edit_category').value = p.category;
-            document.getElementById('edit_unit').value = p.unit;
-            document.getElementById('edit_tag').value = p.tag ?? '';
-            document.getElementById('edit_description').value = p.description ?? '';
-            document.getElementById('editForm').action = `/admin/products/${p.id}`;
-            if (p.image) {
-                document.getElementById('editCurrentImg').classList.remove('hidden');
-                document.getElementById('editImgPreview').src = `/storage/${p.image}`;
-            } else {
-                document.getElementById('editCurrentImg').classList.add('hidden');
-            }
-            document.getElementById('editModal').classList.add('open');
-        }
 
-        function closeEditModal() {
-            document.getElementById('editModal').classList.remove('open');
-        }
-
-        // ══ DELETE MODAL ══
-        function openDeleteModal(id, name) {
-            document.getElementById('deleteProductName').textContent = name;
-            document.getElementById('deleteForm').action = `/admin/products/${id}`;
-            document.getElementById('deleteModal').classList.add('open');
-        }
-
-        function closeDeleteModal() {
-            document.getElementById('deleteModal').classList.remove('open');
-        }
-
-        // ══ ORDER DETAIL MODAL ══
-        function infoRow(label, value) {
-            return `<div class="flex items-start gap-2"><span class="text-xs font-extrabold text-secondary w-32 shrink-0 pt-0.5">${label}</span><span class="text-sm font-semibold text-primary flex-1">${value}</span></div>`;
-        }
-
-        function openOrderDetail(o) {
-            if (typeof o === 'string') o = JSON.parse(o);
-            document.getElementById('orderDetailBody').innerHTML = `
-    <div class="flex items-center justify-between">
-        <div class="font-black text-xl text-primary">#${o.id}</div>
-        <span class="text-xs font-extrabold px-2.5 py-1 rounded-lg" style="${statusColor[o.status]}">${o.status}</span>
-    </div>
-    <div class="p-4 rounded-xl flex flex-col gap-2" style="background:var(--input-bg);border:1px solid var(--border);">
-        ${infoRow('👤 Customer', o.customer)}${infoRow('📧 Email', o.email)}${infoRow('📞 Phone', o.phone)}${infoRow('📍 Address', o.address)}${infoRow('📅 Date', o.date)}${infoRow('💳 Payment', o.payment)}
-    </div>
-    <div class="p-4 rounded-xl" style="background:var(--input-bg);border:1px solid var(--border);">
-        <div class="text-xs font-extrabold text-secondary mb-2 uppercase tracking-widest">Items</div>
-        <div class="text-sm font-semibold text-primary">${o.items}</div>
-    </div>
-    <div class="flex items-center justify-between p-4 rounded-xl" style="background:var(--input-bg);border:1px solid var(--border);">
-        <div class="font-extrabold text-sm text-primary">Total Amount</div>
-        <div class="font-black text-xl" style="color:#0c7a3e;">RS ${o.total}</div>
-    </div>`;
-            document.getElementById('orderModal').classList.add('open');
-        }
-
-        // ══ CUSTOMER DETAIL MODAL ══
-        function openCustomerDetail(c) {
-            if (typeof c === 'string') c = JSON.parse(c);
-            const initials = c.name.split(' ').map(w => w[0]).join('').slice(0, 2);
-            document.getElementById('customerDetailBody').innerHTML = `
-    <div class="flex items-center gap-4 mb-5">
-        <div class="w-14 h-14 rounded-full flex items-center justify-center font-black text-xl shrink-0" style="background:#e8f5ee;color:#0c7a3e;">${initials}</div>
-        <div><div class="font-black text-xl text-primary">${c.name}</div><div class="text-xs font-bold text-secondary mt-0.5">${c.id}</div><span class="text-[10px] font-extrabold px-2 py-0.5 rounded-lg" style="background:#f0fdf4;color:#16a34a;">${c.status}</span></div>
-    </div>
-    <div class="p-4 rounded-xl flex flex-col gap-2 mb-4" style="background:var(--input-bg);border:1px solid var(--border);">
-        ${infoRow('📧 Email', c.email)}${infoRow('📞 Phone', c.phone)}${infoRow('📍 Address', c.address)}${infoRow('⚧ Gender', c.gender)}${infoRow('🎂 DOB', c.dob)}${infoRow('📅 Joined', c.joined)}
-    </div>
-    <div class="grid grid-cols-2 gap-3">
-        <div class="p-4 rounded-xl text-center" style="background:var(--input-bg);border:1px solid var(--border);">
-            <div class="text-2xl font-black" style="color:#0c7a3e;">${c.orders}</div><div class="text-xs font-bold text-secondary mt-0.5">Total Orders</div>
-        </div>
-        <div class="p-4 rounded-xl text-center" style="background:var(--input-bg);border:1px solid var(--border);">
-            <div class="text-2xl font-black" style="color:#0c7a3e;">RS ${c.total.toLocaleString()}</div><div class="text-xs font-bold text-secondary mt-0.5">Total Spent</div>
-        </div>
-    </div>`;
-            document.getElementById('customerModal').classList.add('open');
-        }
-
-        // ══ ADD PRODUCT FORM ══
+        // ── ADD PRODUCT LIVE PREVIEW ──
+        // These functions update the preview card on the right as you type.
+        // They read from form inputs and update preview DOM elements. No server contact.
         function updatePreview() {
             document.getElementById('previewName').textContent = document.getElementById('productName').value.trim() ||
                 'Product name';
@@ -2258,6 +2413,8 @@
             document.getElementById('previewPrice').textContent = price ? `RS ${price}` : 'RS —';
             document.getElementById('nameCounter').textContent =
                 `${document.getElementById('productName').value.length} / 60`;
+
+            // Show discount % badge if compare-at price is higher than selling price
             const sell = parseFloat(price) || 0;
             const compare = parseFloat(document.getElementById('comparePrice').value) || 0;
             const badge = document.getElementById('discountBadge');
@@ -2274,6 +2431,7 @@
                 `${document.getElementById('productDesc').value.length} / 300`;
         }
 
+        // Update the preview tag badge when a tag radio is selected
         function updateTag() {
             const selected = document.querySelector('input[name="tag"]:checked');
             const tag = selected ? selected.value : '';
@@ -2283,9 +2441,12 @@
                 previewTag.textContent = tag;
                 previewTag.style.background = tagMeta[tag].bg;
                 previewTag.style.color = tagMeta[tag].color;
-            } else previewTag.classList.add('hidden');
+            } else {
+                previewTag.classList.add('hidden');
+            }
         }
 
+        // Show stock count display below input with colour coding
         function updateStock() {
             const qty = parseInt(document.getElementById('stockQty').value) || 0;
             const display = document.getElementById('stockDisplay');
@@ -2301,6 +2462,7 @@
             }
         }
 
+        // Show image preview when file selected (using FileReader API, no upload yet)
         function handleImageUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -2316,30 +2478,38 @@
             reader.readAsDataURL(file);
         }
 
+
+        // ── FORM VALIDATION ──
+        // Checks required fields before allowing form submit.
+        // Returns true if all valid, false if any field is empty.
         function validate() {
             let ok = true;
             [{
-                id: 'productName',
-                err: 'nameError',
-                check: v => v.trim() !== ''
-            }, {
-                id: 'productCategory',
-                err: 'catError',
-                check: v => v !== ''
-            }, {
-                id: 'productUnit',
-                err: 'unitError',
-                check: v => v.trim() !== ''
-            }, {
-                id: 'productPrice',
-                err: 'priceError',
-                check: v => v !== '' && parseFloat(v) >= 0
-            }].forEach(f => {
-                const el = document.getElementById(f.id),
-                    err = document.getElementById(f.err);
+                    id: 'productName',
+                    err: 'nameError',
+                    check: v => v.trim() !== ''
+                },
+                {
+                    id: 'productCategory',
+                    err: 'catError',
+                    check: v => v !== ''
+                },
+                {
+                    id: 'productUnit',
+                    err: 'unitError',
+                    check: v => v.trim() !== ''
+                },
+                {
+                    id: 'productPrice',
+                    err: 'priceError',
+                    check: v => v !== '' && parseFloat(v) >= 0
+                },
+            ].forEach(f => {
+                const el = document.getElementById(f.id);
+                const err = document.getElementById(f.err);
                 if (!f.check(el.value)) {
-                    el.classList.add('error');
-                    err.classList.remove('hidden');
+                    el.classList.add('error'); // red border
+                    err.classList.remove('hidden'); // show error message
                     ok = false;
                 } else {
                     el.classList.remove('error');
@@ -2349,14 +2519,19 @@
             return ok;
         }
 
+        // Called by "Publish Product" button.
+        // Validates first, then submits the form to the server.
         function submitForm() {
             if (!validate()) {
                 showToast('⚠️ Please fill in all required fields');
                 return;
             }
+            // This is where the form actually gets submitted to Laravel.
+            // The form's action="{{ route('admin.store') }}" sends it to AdminController@store()
             document.getElementById('productForm').submit();
         }
 
+        // Clear all form fields and reset preview
         function resetForm() {
             ['productName', 'productDesc', 'productUnit', 'productPrice', 'comparePrice', 'stockQty'].forEach(id => {
                 const el = document.getElementById(id);
@@ -2366,8 +2541,8 @@
                 }
             });
             document.getElementById('productCategory').value = '';
-            ['nameError', 'catError', 'unitError', 'priceError'].forEach(id => document.getElementById(id).classList.add(
-                'hidden'));
+            ['nameError', 'catError', 'unitError', 'priceError'].forEach(id =>
+                document.getElementById(id).classList.add('hidden'));
             document.getElementById('tagNone').checked = true;
             document.getElementById('uploadDefault').classList.remove('hidden');
             document.getElementById('uploadPreviewWrap').classList.add('hidden');
@@ -2385,7 +2560,9 @@
             showToast('🗑️ Form cleared');
         }
 
-        // ══ CLOSE MODALS ON BACKDROP CLICK ══
+
+        // ── CLOSE MODALS ON BACKDROP CLICK ──
+        // If you click the dark overlay behind a modal, it closes
         ['editModal', 'deleteModal', 'orderModal', 'customerModal', 'catModal', 'deliveryModal', 'discountModal'].forEach(
             id => {
                 document.getElementById(id).addEventListener('click', function(e) {
@@ -2393,7 +2570,9 @@
                 });
             });
 
-        // ══ TOAST ══
+
+        // ── TOAST NOTIFICATION ──
+        // Shows a small popup message at bottom-right, auto-hides after 3 seconds.
         let toastTimer;
 
         function showToast(msg) {
@@ -2404,75 +2583,65 @@
             toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
         }
 
-        // ══ LARAVEL SESSION FLASH ══
+        // ── LARAVEL SESSION FLASH MESSAGES ──
+        // After a form submit (add/edit/delete), Laravel redirects back and can
+        // flash a success/error message into the session.
+        // Blade checks for that message and triggers the JS toast if it exists.
         @if (session('success'))
-            showToast('✅ {{ session('success') }}');
+            showToast("✅ {{ session('success') }}");
         @endif
         @if (session('error'))
-            showToast('⚠️ {{ session('error') }}');
+            showToast("⚠️ {{ session('error') }}");
         @endif
 
 
-
-        //drag and frop image
-
-
-
+        // ── IMAGE DRAG AND DROP ──
         const uploadZone = document.getElementById('uploadZone');
         const imageInput = document.getElementById('imageInput');
-        const previewImg = document.getElementById('uploadPreviewImg');
+        const previewImgEl = document.getElementById('uploadPreviewImg');
         const previewWrap = document.getElementById('uploadPreviewWrap');
         const uploadDefault = document.getElementById('uploadDefault');
 
-        // click overlay already works via onclick
-
-        // drag over
+        // Highlight border when user drags a file over the zone
         uploadZone.addEventListener('dragover', (e) => {
             e.preventDefault();
-            uploadZone.style.borderColor = "#4f46e5"; // highlight
+            uploadZone.style.borderColor = '#4f46e5';
         });
 
-        // drag leave
+        // Remove highlight when drag leaves
         uploadZone.addEventListener('dragleave', () => {
-            uploadZone.style.borderColor = "var(--border)";
+            uploadZone.style.borderColor = 'var(--border)';
         });
 
-        // drop file
+        // Handle drop: attach file to the hidden input, show preview
         uploadZone.addEventListener('drop', (e) => {
             e.preventDefault();
-
-            uploadZone.style.borderColor = "var(--border)";
-
+            uploadZone.style.borderColor = 'var(--border)';
             const file = e.dataTransfer.files[0];
-
             if (file) {
-                imageInput.files = e.dataTransfer.files;
+                imageInput.files = e.dataTransfer.files; // attach to real input so it submits with form
                 showPreview(file);
             }
         });
 
-        // file input change (click upload)
+        // Handle normal click-to-upload
         imageInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
-            if (file) {
-                showPreview(file);
-            }
+            if (file) showPreview(file);
         });
 
-        // preview function
+        // Read the image file and show it as a preview (FileReader = browser-only, no upload)
         function showPreview(file) {
             const reader = new FileReader();
-
             reader.onload = function(e) {
-                previewImg.src = e.target.result;
-
+                previewImgEl.src = e.target.result;
                 uploadDefault.classList.add('hidden');
                 previewWrap.classList.remove('hidden');
             };
-
             reader.readAsDataURL(file);
         }
 
+        // Attach AJAX pagination handlers after DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
             bindPaginationLinks();
         });
