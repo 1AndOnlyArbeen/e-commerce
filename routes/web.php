@@ -49,5 +49,4 @@ Route::delete('/admin/products/{id}', [AdminController::class, 'destroy']);
 Route::post('/cart/add', [CartController::class, 'add']);
 Route::get('/cart', [CartController::class, 'get']);
 Route::post('/cart/remove', [CartController::class, 'remove']);
-Route::post('/cart/delete', [CartController::class, 'delete']);
-Route::post('/cart/merge', [CartController::class, 'merge'])->middleware('auth');
+Route::post('/cart/merge', [CartController::class, 'merge']);

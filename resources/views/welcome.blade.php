@@ -651,7 +651,6 @@
                     <div class="border-t border-gray-200 pt-3 space-y-1.5">
                         <div class="flex justify-between text-sm text-gray-500 font-semibold"><span>Subtotal</span><span id="confirm_sub">RS 0</span></div>
                         <div class="flex justify-between text-sm text-gray-500 font-semibold"><span>Delivery</span><span class="text-green-600 font-bold">FREE</span></div>
-                        <div class="flex justify-between text-sm text-gray-500 font-semibold"><span>Tax (5%)</span><span id="confirm_tax">RS 0</span></div>
                         <div class="flex justify-between text-base font-extrabold text-gray-900 border-t border-gray-200 pt-2 mt-1"><span>Total</span><span id="confirm_total">RS 0</span></div>
                     </div>
                 </div>
@@ -1075,7 +1074,6 @@
             footer.innerHTML = `
 <div class="flex justify-between mb-1.5"><span class="text-gray-400 text-sm font-semibold">Subtotal</span><strong class="font-bold text-sm">RS ${subtotal.toFixed(2)}</strong></div>
 <div class="flex justify-between mb-1.5"><span class="text-gray-400 text-sm font-semibold">Delivery</span><strong class="font-bold text-sm text-[#0c7a3e]">FREE</strong></div>
-<div class="flex justify-between mb-1.5"><span class="text-gray-400 text-sm font-semibold">Tax (5%)</span><strong class="font-bold text-sm">RS ${tax.toFixed(2)}</strong></div>
 <hr class="border-t border-gray-100 my-3">
 <div class="flex justify-between mb-4"><span class="font-extrabold text-base">Total</span><span class="font-extrabold text-base">RS ${total.toFixed(2)}</span></div>
 <button onclick="openCheckout()" class="bg-[#0c7a3e] hover:bg-[#0a6633] text-white border-none rounded-xl py-4 px-6 w-full font-[Nunito] text-base font-extrabold cursor-pointer transition-colors">Proceed to Checkout →</button>`;
@@ -1128,9 +1126,11 @@
             const subtotal = entries.reduce((sum, [id, qty]) => {
                 const p = getProduct(id);
                 return sum + (p ? parseFloat(p.price) * qty : 0);
+           
             }, 0);
-            const tax   = subtotal * 0.05;
-            const total = subtotal + tax;
+            
+            const tax   = 0; // Removed tax
+            const total = subtotal;
 
             const itemsHtml = entries.map(([id, qty]) => {
                 const p = getProduct(id);
@@ -1145,7 +1145,6 @@
             document.getElementById('checkoutTotal').textContent       = `RS ${total.toFixed(2)}`;
             document.getElementById('confirmItems').innerHTML           = itemsHtml;
             document.getElementById('confirm_sub').textContent         = `RS ${subtotal.toFixed(2)}`;
-            document.getElementById('confirm_tax').textContent         = `RS ${tax.toFixed(2)}`;
             document.getElementById('confirm_total').textContent       = `RS ${total.toFixed(2)}`;
         }
 

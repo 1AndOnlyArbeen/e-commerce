@@ -1604,6 +1604,20 @@
         let products = @json($products->items());
         let currentPage = 1;
 
+        // Dummy data for orders and customers
+        let orders = [
+            {id:1, customer:'John Doe', items:'2 items', date:'2024-03-15', total:'150.00', status:'Delivered'},
+            {id:2, customer:'Jane Smith', items:'1 item', date:'2024-03-14', total:'75.50', status:'Processing'},
+            {id:3, customer:'Bob Johnson', items:'3 items', date:'2024-03-13', total:'225.00', status:'Pending'},
+            {id:4, customer:'Alice Brown', items:'1 item', date:'2024-03-12', total:'50.00', status:'Delivered'},
+            {id:5, customer:'Charlie Wilson', items:'2 items', date:'2024-03-11', total:'120.00', status:'Cancelled'}
+        ];
+        let customers = [
+            {name:'John Doe', email:'john@example.com', phone:'+977 98XXXXXXXX', address:'Kathmandu, Nepal', orders:5, joined:'2024-01-15', total:750, status:'Active'},
+            {name:'Jane Smith', email:'jane@example.com', phone:'+977 98XXXXXXXX', address:'Pokhara, Nepal', orders:3, joined:'2024-02-20', total:450, status:'Active'},
+            {name:'Bob Johnson', email:'bob@example.com', phone:'+977 98XXXXXXXX', address:'Lalitpur, Nepal', orders:2, joined:'2024-03-10', total:300, status:'Active'}
+        ];
+
         function fetchProducts(page = 1) {
             fetch(`/admin?page=${page}`, {
                     headers: {

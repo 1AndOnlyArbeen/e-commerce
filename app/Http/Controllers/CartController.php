@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\CartItem;
+use App\Models\Order;
+use App\Models\OrderItem;
 
 class CartController extends Controller
 {
@@ -31,6 +33,8 @@ class CartController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    
 
     /**
      * Return all cart items for the logged-in user.
