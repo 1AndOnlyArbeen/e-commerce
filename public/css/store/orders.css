@@ -1,0 +1,130 @@
+/* Orders Modal */
+
+#ordersModal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 600;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+#ordersModal.open {
+    display: flex;
+}
+
+.orders-box {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    width: 780px;
+    max-width: 96vw;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: modalIn 0.3s var(--ease-spring);
+    box-shadow: var(--shadow-modal);
+}
+
+.order-row {
+    display: flex;
+    align-items: center;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border-light);
+    cursor: pointer;
+    transition: background 0.2s ease;
+    gap: 16px;
+}
+
+.order-row:hover {
+    background: var(--surface-2);
+}
+
+.order-row:last-child {
+    border-bottom: none;
+}
+
+/* Status pills */
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 6px;
+    padding: 3px 10px;
+    white-space: nowrap;
+    letter-spacing: 0.01em;
+}
+
+.status-delivered  { background: #e9f5ef; color: #0c7a3e; }
+.status-transit    { background: #fef3e2; color: #c45e00; }
+.status-processing { background: #e8f0fe; color: #1a5fb4; }
+.status-cancelled  { background: #fce8ec; color: #a8203a; }
+.status-pending    { background: #f3edf7; color: #7c3aab; }
+
+/* Order detail */
+.order-detail-box {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    width: 820px;
+    max-width: 96vw;
+    max-height: 92vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: modalIn 0.3s var(--ease-spring);
+    box-shadow: var(--shadow-modal);
+}
+
+/* Timeline */
+.timeline {
+    position: relative;
+    padding-left: 28px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 9px;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    background: var(--border-light);
+    border-radius: 2px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 22px;
+}
+
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: -23px;
+    top: 3px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    transition: all 0.2s ease;
+}
+
+.timeline-dot.done {
+    background: var(--brand);
+    border-color: var(--brand);
+}
+
+.timeline-dot.active {
+    background: var(--surface);
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(12, 122, 62, 0.12);
+}

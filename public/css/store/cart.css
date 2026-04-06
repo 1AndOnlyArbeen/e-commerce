@@ -1,0 +1,25 @@
+/* Cart Badge & Drawer */
+
+.cart-badge {
+    display: none;
+    font-variant-numeric: tabular-nums;
+}
+
+.cart-badge.visible {
+    display: flex;
+    animation: badgePop 0.3s var(--ease-spring);
+}
+
+@keyframes badgePop {
+    0% { transform: scale(0.6); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.drawer {
+    transition: right 0.35s var(--ease-out);
+    box-shadow: var(--shadow-xl);
+}
+
+.drawer-overlay {
+    transition: opacity 0.3s ease;
+}

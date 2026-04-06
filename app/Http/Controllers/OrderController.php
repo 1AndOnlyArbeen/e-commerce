@@ -65,7 +65,7 @@ class OrderController extends Controller
             'user_id'         => auth()->id(),
             'payment_method'  => $payment,
             'payment_status'  => 'pending',
-            'staus'           => 'new',
+            'status'          => 'pending',
             'currency'        => 'NPR',
             'shipping_amount' => 0,
             'shipping_method' => 'standard',

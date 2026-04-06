@@ -22,15 +22,15 @@ class HomeController
 
         $products->getCollection()->transform(function ($p) {
             return [
-                'id'       => $p->id,
-                'name'     => $p->name,
-                'price'    => $p->price,
-                'unit'     => $p->unit,
-                'category' => $p->category,
-                'image'    => $p->image ? asset('storage/' . $p->image) : null,
-                'tag'      => $p->tag,
-                'tagBg'    => '#e8f5e9',
-                'tagColor' => '#2e7d32',
+                'id'             => $p->id,
+                'name'           => $p->name,
+                'price'          => $p->price,
+                'unit'           => $p->unit,
+                'category'       => $p->category,
+                'image'          => $p->image ? asset('storage/' . $p->image) : null,
+                'tag'            => $p->tag,
+                'stock_quantity' => $p->stock_quantity,
+                'description'    => $p->description,
             ];
         });
 
@@ -49,7 +49,7 @@ class HomeController
                             'id'             => $order->id,
                             'order_number'   => 'ARB-' . strtoupper(substr(md5($order->id), 0, 6)),
                             'placed_at'      => $order->created_at,
-                            'status'         => $order->staus ?? 'pending',
+                            'status'         => $order->status ?? 'pending',
                             'payment_method' => $order->payment_method ?? 'cod',
                             'payment_status' => $order->payment_status ?? 'pending',
                             'subtotal'       => $order->items->reduce(fn($carry, $i) => $carry + ($i->unit_amount * $i->quantity), 0),
@@ -82,10 +82,4 @@ class HomeController
         return view('welcome', compact('products', 'categories', 'category', 'orders'));
     }
 
-    public function create() {}
-    public function store(Request $request) {}
-    public function show(string $id) {}
-    public function edit(string $id) {}
-    public function update(Request $request, string $id) {}
-    public function destroy(string $id) {}
 }

@@ -8,15 +8,14 @@ class Order extends Model
 {
     protected $fillable = [
         'user_id',
+        'order_number',
         'payment_method',
         'payment_status',
-        'staus',
+        'status',
         'currency',
         'shipping_amount',
         'shipping_method',
         'notes',
-        
-
     ];
 
     public function user()
@@ -29,19 +28,20 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function items()
+    {
+        return $this->hasMany(OrderItem::class);
+    }
+
     public function address()
     {
         return $this->hasOne(Address::class);
     }
+
     public function getTotalAmountAttribute()
-{
-    return $this->orderItems->sum('total_amount');
-}
-public function items()
-{
-    return $this->hasMany(OrderItem::class);
-}
+    {
+        return $this->orderItems->sum('total_amount');
+    }
 
-
-protected $appends = ['total_amount'];
+    protected $appends = ['total_amount'];
 }

@@ -1,0 +1,276 @@
+/* Dark Mode */
+
+[data-theme="dark"] {
+    --bg: #121417;
+    --surface: #1a1d22;
+    --surface-2: #22262c;
+    --surface-raised: #252930;
+    --border: #2e3238;
+    --border-light: #262a30;
+    --text-primary: #e4e7eb;
+    --text-secondary: #9199a3;
+    --text-muted: #5f6872;
+    --input-bg: #1a1d22;
+    --input-text: #dce0e5;
+
+    --brand-light: rgba(12, 122, 62, 0.12);
+    --brand-subtle: rgba(12, 122, 62, 0.06);
+
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.15);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.15);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.15);
+    --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.2);
+    --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.4), 0 8px 20px rgba(0, 0, 0, 0.25);
+
+    color-scheme: dark;
+}
+
+[data-theme="dark"] body {
+    background: var(--bg);
+}
+
+/* Typography overrides */
+[data-theme="dark"] .text-gray-900 {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .text-gray-700 {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .text-gray-600 {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .text-gray-500 {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .text-gray-400 {
+    color: var(--text-muted) !important;
+}
+
+/* Surface overrides */
+[data-theme="dark"] .bg-white {
+    background: var(--surface) !important;
+}
+
+[data-theme="dark"] .bg-gray-100 {
+    background: var(--surface-2) !important;
+}
+
+[data-theme="dark"] .bg-gray-50 {
+    background: var(--surface-2) !important;
+}
+
+/* Border overrides */
+[data-theme="dark"] .border-gray-100,
+[data-theme="dark"] .border-gray-200 {
+    border-color: var(--border) !important;
+}
+
+/* Navigation */
+[data-theme="dark"] aside {
+    background: var(--surface);
+    border-color: var(--border);
+}
+
+[data-theme="dark"] nav .bg-white {
+    background: var(--surface) !important;
+    border-bottom: 1px solid var(--border);
+    box-shadow: none;
+}
+
+[data-theme="dark"] nav input {
+    color: var(--input-text);
+    background: var(--surface-2);
+}
+
+[data-theme="dark"] nav input::placeholder {
+    color: var(--text-muted);
+}
+
+/* Product cards */
+[data-theme="dark"] .product-card {
+    background: var(--surface);
+    border-color: var(--border);
+}
+
+[data-theme="dark"] .product-card:hover {
+    border-color: #3a3f46;
+    background: var(--surface-raised);
+}
+
+[data-theme="dark"] .product-img-wrap {
+    background: var(--surface-2);
+}
+
+/* Modals */
+[data-theme="dark"] .modal-box,
+[data-theme="dark"] .checkout-box,
+[data-theme="dark"] .orders-box,
+[data-theme="dark"] .order-detail-box {
+    background: var(--surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+}
+
+[data-theme="dark"] .modal-backdrop,
+[data-theme="dark"] #checkoutModal,
+[data-theme="dark"] #ordersModal {
+    background: rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dark"] .modal-img-wrap {
+    background: var(--surface-2);
+}
+
+/* Thumbnails */
+[data-theme="dark"] .thumb-strip {
+    background: var(--surface-2);
+    border-color: var(--border);
+}
+
+[data-theme="dark"] .thumb {
+    background: var(--surface);
+    border-color: transparent;
+}
+
+[data-theme="dark"] .thumb.active {
+    border-color: var(--brand);
+}
+
+/* Quantity buttons */
+[data-theme="dark"] .qty-btn {
+    border-color: var(--border);
+    background: var(--surface-2);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .qty-btn:hover {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: #fff;
+}
+
+/* Cart drawer */
+[data-theme="dark"] #cartDrawer {
+    background: var(--surface);
+    color: var(--text-primary);
+    border-left: 1px solid var(--border);
+}
+
+[data-theme="dark"] #accountMenu {
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+
+/* Checkout */
+[data-theme="dark"] .step-dot {
+    border-color: var(--border);
+    background: var(--surface-2);
+    color: var(--text-muted);
+}
+
+[data-theme="dark"] .step-dot.active {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: #fff;
+}
+
+[data-theme="dark"] .step-dot.done {
+    background: rgba(12, 122, 62, 0.15);
+    border-color: var(--brand);
+    color: var(--brand);
+}
+
+[data-theme="dark"] .step-line {
+    background: var(--border);
+}
+
+[data-theme="dark"] .pay-card {
+    border-color: var(--border);
+    background: var(--surface);
+}
+
+[data-theme="dark"] .pay-card:hover {
+    background: rgba(12, 122, 62, 0.08);
+    border-color: rgba(12, 122, 62, 0.3);
+}
+
+[data-theme="dark"] .pay-card.selected {
+    background: rgba(12, 122, 62, 0.12);
+    border-color: var(--brand);
+}
+
+[data-theme="dark"] #addrPrefillBanner {
+    background: rgba(12, 122, 62, 0.08);
+    border-color: rgba(12, 122, 62, 0.2);
+}
+
+/* Orders */
+[data-theme="dark"] .order-row {
+    border-color: var(--border);
+}
+
+[data-theme="dark"] .order-row:hover {
+    background: var(--surface-2);
+}
+
+/* Status pills - dark variants */
+[data-theme="dark"] .status-delivered  { background: rgba(12, 122, 62, 0.12); color: #4ade80; }
+[data-theme="dark"] .status-transit    { background: rgba(196, 94, 0, 0.12); color: #fbbf24; }
+[data-theme="dark"] .status-processing { background: rgba(26, 95, 180, 0.12); color: #60a5fa; }
+[data-theme="dark"] .status-cancelled  { background: rgba(168, 32, 58, 0.12); color: #f87171; }
+[data-theme="dark"] .status-pending    { background: rgba(124, 58, 171, 0.12); color: #c084fc; }
+
+/* Timeline */
+[data-theme="dark"] .timeline::before {
+    background: var(--border);
+}
+
+[data-theme="dark"] .timeline-dot {
+    border-color: var(--border);
+    background: var(--surface);
+}
+
+[data-theme="dark"] .timeline-dot.done {
+    background: var(--brand);
+    border-color: var(--brand);
+}
+
+[data-theme="dark"] .timeline-dot.active {
+    border-color: var(--brand);
+    background: var(--surface);
+    box-shadow: 0 0 0 3px rgba(12, 122, 62, 0.15);
+}
+
+/* Scrollbar */
+[data-theme="dark"] ::-webkit-scrollbar {
+    width: 6px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+    background: var(--surface);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background: #3a3f46;
+}
+
+/* Tag badges */
+[data-theme="dark"] .tag-badge {
+    opacity: 0.9;
+}
+
+/* Selection */
+[data-theme="dark"] ::selection {
+    background: rgba(12, 122, 62, 0.3);
+    color: #e4e7eb;
+}

@@ -54,7 +54,15 @@ class AdminController extends Controller
         $byCategory = Product::all()->groupBy('category');
         $categories = Category::withCount('products')->get();
 
-        return view('admin', compact('allProduct', 'byCategory', 'products', 'categories', 'orders', 'customers'));
+        $totalOrders = Order::count();
+        $pendingOrders = Order::where('status', 'pending')->orWhere('status', 'new')->count();
+        $totalCustomers = User::where('role', '!=', 'admin')->count();
+        $todayRevenue = Order::whereDate('created_at', today())
+            ->with('items')
+            ->get()
+            ->sum(fn($o) => $o->items->sum('total_amount'));
+
+        return view('admin', compact('allProduct', 'byCategory', 'products', 'categories', 'orders', 'customers', 'totalOrders', 'pendingOrders', 'totalCustomers', 'todayRevenue'));
     }
 
     public function create(Request $request) {}

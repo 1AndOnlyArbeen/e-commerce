@@ -9,6 +9,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PaymentController;
 
 Route::get('/', [HomeController::class, 'index'])
     ->name('index');
@@ -60,5 +61,22 @@ Route::middleware('auth')->group(function () {
     Route::post('/checkout/payment', [OrderController::class, 'savePayment'])->name('checkout.payment');
     Route::post('/checkout/place',   [OrderController::class, 'placeOrder'])->name('checkout.place');
     Route::get('/checkout/last-address', [OrderController::class, 'getLastAddress'])->name('checkout.lastAddress');
+
+    // Khalti payment routes
+    Route::post('/payment/khalti/initiate', [PaymentController::class, 'initiateKhalti'])->name('payment.khalti.initiate');
+    Route::post('/payment/khalti/verify', [PaymentController::class, 'verifyKhalti'])->name('payment.khalti.verify');
 });
+
+// Khalti callback (GET - user redirected here after payment)
+Route::get('/payment/khalti/callback', [PaymentController::class, 'khaltiCallback'])
+    ->name('payment.khalti.callback')
+    ->middleware('auth');
+
+// Khalti demo mode (works without API key)
+Route::get('/payment/khalti/demo', [PaymentController::class, 'demoPage'])
+    ->name('payment.khalti.demo')
+    ->middleware('auth');
+Route::post('/payment/khalti/demo/confirm', [PaymentController::class, 'demoConfirm'])
+    ->name('payment.khalti.demo.confirm')
+    ->middleware('auth');
 

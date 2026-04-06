@@ -664,19 +664,19 @@
                 </div>
                 <div class="card p-5">
                     <div class="text-2xl mb-1">🛒</div>
-                    <div class="text-3xl font-black text-primary">5</div>
+                    <div class="text-3xl font-black text-primary">{{ $pendingOrders }}</div>
                     <div class="text-sm font-bold text-secondary mt-1">Pending Orders</div>
                     <div class="text-xs text-orange-500 font-bold mt-2">Needs attention</div>
                 </div>
                 <div class="card p-5">
                     <div class="text-2xl mb-1">👥</div>
-                    <div class="text-3xl font-black text-primary">142</div>
+                    <div class="text-3xl font-black text-primary">{{ $totalCustomers }}</div>
                     <div class="text-sm font-bold text-secondary mt-1">Customers</div>
                     <div class="text-xs text-green-600 font-bold mt-2">+12 this month</div>
                 </div>
                 <div class="card p-5">
                     <div class="text-2xl mb-1">💰</div>
-                    <div class="text-3xl font-black text-primary">RS 24K</div>
+                    <div class="text-3xl font-black text-primary">RS {{ number_format($todayRevenue) }}</div>
                     <div class="text-sm font-bold text-secondary mt-1">Revenue Today</div>
                     <div class="text-xs text-green-600 font-bold mt-2">+18% vs yesterday</div>
                 </div>
@@ -738,7 +738,7 @@
             </div>
             <div class="card overflow-hidden">
                 <div class="px-6 py-4 font-black text-sm text-primary" style="border-bottom:1px solid var(--border);">
-                    Recent Orders <span class="text-secondary font-semibold">(5 pending)</span>
+                    Recent Orders <span class="text-secondary font-semibold">({{ $pendingOrders }} pending)</span>
                 </div>
                 <div id="ordersBody"></div>
             </div>
