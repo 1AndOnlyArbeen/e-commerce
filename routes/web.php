@@ -52,8 +52,6 @@ Route::get('/cart', [CartController::class, 'get']);
 Route::post('/cart/remove', [CartController::class, 'remove']);
 Route::post('/cart/merge', [CartController::class, 'merge']);
 
-//for address and order route
-Route::post('/checkout/address', [OrderController::class, 'saveAddress'])->name('checkout.address')->middleware('auth');
 
 
 // Checkout routes — auth required
@@ -63,3 +61,4 @@ Route::middleware('auth')->group(function () {
     Route::post('/checkout/place',   [OrderController::class, 'placeOrder'])->name('checkout.place');
     Route::get('/checkout/last-address', [OrderController::class, 'getLastAddress'])->name('checkout.lastAddress');
 });
+

@@ -8,26 +8,9 @@ use App\Models\Address;
 use App\Models\CartItem;
 use App\Models\OrderItem;
 
-
-    // i have to make the order controller to handle the order process
-    // 1, i have to get the address from the request, and save it to the database, when the user hit continue rather it fill all other info in the Address Table .
-    // 2, i have to get the payment method from the request, and save it to the database, in same order table, when the user hit continue rather it fill all other info, but for now i wil do for cash on delivery, and i will add other payment method later.
-    // 3, i have to get the oder details form the user cart database and show to the user in review order page and then when the user hit place order, i will save the order details to the database and clear the user cart database.
-    // but the catch is i will not give tha ! auth for chekout if the user is non auth or logged in he has to redirect to login page and then after login he will redirect to checkout page again, but if the user is auth or logged in he can access the checkout page directly without redirecting to login page.
-
-
-
-// get the address details ffrom the request and saving into the addressesand description as i have added the description column 
-
 class OrderController extends Controller
 {
-    /**
-     * Step 1 — Save delivery address.
-     * Creates the Order shell + Address row together.
-     * Stores order_id in session so Step 2 & 3 can find it.
-     * If the user already has a previous address we return it
-     * so the blade can pre-fill the form.
-     */
+    // Step 1 — session only, no DB
     public function saveAddress(Request $request)
     {
         $request->validate([
@@ -41,94 +24,106 @@ class OrderController extends Controller
             'description'    => 'nullable|string|max:500',
         ]);
 
-        // Create the order shell (no items yet — those come at Step 3)
-        $order = Order::create([
-            'user_id'         => auth()->id(),
-            'payment_method'  => 'cod',
-            'payment_status'  => 'pending',
-            'status'          => 'pending',
-            'currency'        => 'NPR',
-            'shipping_amount' => 0,
-            'shipping_method' => 'standard',
-        ]);
+        session(['checkout_address' => $request->only([
+            'firstName', 'last_name', 'phone_number',
+            'street_address', 'city', 'state', 'zip_code', 'description'
+        ])]);
 
-        Address::create([
-            'order_id'       => $order->id,
-            'firstName'      => $request->firstName,
-            'last_name'      => $request->last_name,
-            'phone_number'   => $request->phone_number,
-            'street_address' => $request->street_address,
-            'city'           => $request->city,
-            'state'          => $request->state,
-            'zip_code'       => $request->zip_code,
-            'description'    => $request->description,
-        ]);
-
-        session(['pending_order_id' => $order->id]);
-
-        return response()->json([
-            'success'  => true,
-            'order_id' => $order->id,
-        ]);
+        return response()->json(['success' => true]);
     }
 
-    /**
-     * Step 2 — Save payment method onto the existing pending order.
-     */
+    // Step 2 — session only, no DB
     public function savePayment(Request $request)
     {
         $request->validate([
             'payment_method' => 'required|in:cod,esewa,khalti,bank',
         ]);
 
-        $orderId = session('pending_order_id');
-
-        if (!$orderId) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Session expired. Please start checkout again.',
-            ], 422);
-        }
-
-        $order = Order::where('id', $orderId)
-                      ->where('user_id', auth()->id())
-                      ->firstOrFail();
-
-        $order->update(['payment_method' => $request->payment_method]);
+        session(['checkout_payment' => $request->payment_method]);
 
         return response()->json(['success' => true]);
     }
 
-    /**
-     * Step 3 — Confirm & place the order.
-     * Creates OrderItem rows from the DB cart, then clears the cart.
-     */
+    // Step 3 — everything goes to DB here at once
     public function placeOrder(Request $request)
     {
-        $orderId = session('pending_order_id');
+        $address = session('checkout_address');
+        $payment = session('checkout_payment', 'cod');
 
-        if (!$orderId) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Session expired. Please start checkout again.',
-            ], 422);
+        if (!$address) {
+            return response()->json(['success' => false, 'message' => 'Session expired. Please start checkout again.'], 422);
         }
 
-        $order = Order::where('id', $orderId)
-                      ->where('user_id', auth()->id())
-                      ->firstOrFail();
-
-        $cartItems = CartItem::where('user_id', auth()->id())
-                             ->with('product')
-                             ->get();
+        $cartItems = CartItem::where('user_id', auth()->id())->with('product')->get();
 
         if ($cartItems->isEmpty()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Your cart is empty.',
-            ], 422);
+            return response()->json(['success' => false, 'message' => 'Your cart is empty.'], 422);
         }
 
+        // Create order
+        $order = Order::create([
+            'user_id'         => auth()->id(),
+            'payment_method'  => $payment,
+            'payment_status'  => 'pending',
+            'staus'           => 'new',
+            'currency'        => 'NPR',
+            'shipping_amount' => 0,
+            'shipping_method' => 'standard',
+        ]);
+
+        {/*
+
+        logic for address 
+        1. user add the first time address from the from given , then it get saved into datbase with order id and user id 
+        2. when the user second time try to order the db is fetching the address and filling the form auto with the address
+        3. when the user continue it check the db? is the user address match the previous addrress? if yes then dont change into address nor save leave as it is, 
+        4. but when the user change the address then save the chnaged address
+        5. when the user next time try to fetch the address when ordering it fetch the latest one..
+         */}
+        // Save address
+
+
+       $existing = Address::where('user_id', auth()->id())->latest()->first();
+
+if ($existing &&
+    $existing->firstName      === $address['firstName'] &&
+    $existing->last_name      === $address['last_name'] &&
+    $existing->phone_number   === $address['phone_number'] &&
+    $existing->street_address === $address['street_address'] &&
+    $existing->city           === $address['city']
+) {
+    // Same address — just update order_id
+    $existing->update(['order_id' => $order->id]);
+} else if ($existing) {
+    // Changed — update existing row
+    $existing->update([
+        'order_id'       => $order->id,
+        'firstName'      => $address['firstName'],
+        'last_name'      => $address['last_name'],
+        'phone_number'   => $address['phone_number'],
+        'street_address' => $address['street_address'],
+        'city'           => $address['city'],
+        'state'          => $address['state'] ?? null,
+        'zip_code'       => $address['zip_code'] ?? null,
+        'description'    => $address['description'] ?? null,
+    ]);
+} else {
+    // First time — create new
+    Address::create([
+        'order_id'       => $order->id,
+        'user_id'        => auth()->id(),
+        'firstName'      => $address['firstName'],
+        'last_name'      => $address['last_name'],
+        'phone_number'   => $address['phone_number'],
+        'street_address' => $address['street_address'],
+        'city'           => $address['city'],
+        'state'          => $address['state'] ?? null,
+        'zip_code'       => $address['zip_code'] ?? null,
+        'description'    => $address['description'] ?? null,
+    ]);
+}
+
+        // Save items
         foreach ($cartItems as $item) {
             $unitPrice = (float) $item->product->price;
             OrderItem::create([
@@ -140,39 +135,28 @@ class OrderController extends Controller
             ]);
         }
 
-        $order->update(['status' => 'confirmed']);
-
-        // Clear DB cart
+        // Clear cart and session
         CartItem::where('user_id', auth()->id())->delete();
-
-        session()->forget('pending_order_id');
-
-        $orderNumber = 'ARB-' . strtoupper(substr(md5($order->id . now()), 0, 6));
+        session()->forget(['checkout_address', 'checkout_payment']);
 
         return response()->json([
             'success'      => true,
-            'order_number' => $orderNumber,
+            'order_number' => 'ARB-' . strtoupper(substr(md5($order->id), 0, 6)),
             'order_id'     => $order->id,
         ]);
     }
 
-    /**
-     * Called by the blade on checkout open (AJAX GET).
-     * Returns the last address the user used so the form can be pre-filled.
-     */
+    // Pre-fill last address
     public function getLastAddress()
     {
-        // Find the most recent order for this user that has an address
         $lastOrder = Order::where('user_id', auth()->id())
-                          ->with('address')
-                          ->latest()
-                          ->first();
+            ->whereHas('items')
+            ->with('address')
+            ->latest()
+            ->first();
 
         if ($lastOrder && $lastOrder->address) {
-            return response()->json([
-                'found'   => true,
-                'address' => $lastOrder->address,
-            ]);
+            return response()->json(['found' => true, 'address' => $lastOrder->address]);
         }
 
         return response()->json(['found' => false]);

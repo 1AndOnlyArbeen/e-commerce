@@ -8,6 +8,7 @@ class Address extends Model
 {
     protected $fillable = [
         'order_id',
+        'user_id',
         'firstName',
         'last_name',
         'phone_number',
@@ -19,9 +20,13 @@ class Address extends Model
     ];
 
     // Define the relationship with the Order model
-    public function orders()
+    public function order()
     {
         return $this->belongsTo(Order::class);
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function fullName()

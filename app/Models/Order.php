@@ -15,6 +15,7 @@ class Order extends Model
         'shipping_amount',
         'shipping_method',
         'notes',
+        
 
     ];
 
@@ -35,6 +36,10 @@ class Order extends Model
     public function getTotalAmountAttribute()
 {
     return $this->orderItems->sum('total_amount');
+}
+public function items()
+{
+    return $this->hasMany(OrderItem::class);
 }
 
 
